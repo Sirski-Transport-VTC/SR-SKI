@@ -104,7 +104,7 @@ $('spinBtn').onclick=async()=>{
   if(!username){demoSpin();return}
   $('spinBtn').disabled=true;$('result').style.display='none';setStatus('Checking your TrucksBook registration…');
   try{
-    const {data,error}=await getSB().functions.invoke('spin',{body:{username}});
+    const client=await getSB(); const {data,error}=await client.functions.invoke('spin',{body:{username}});
     if(error){
       let message=error.message||'Unable to contact the spinner server.';
       try{
@@ -142,13 +142,13 @@ $('spinBtn').onclick=async()=>{
 };
 $('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');$('spinBtn').disabled=false };
 const adminSection=location.hash==='#admin'; if(adminSection){$('admin').style.display='block'}
-async function adminCall(action,body={}){const {data:{session}}=await getSB().auth.getSession(); if(!session) throw new Error('Please sign in as admin.'); const {data,error}=await getSB().functions.invoke('admin',{body:{action,...body}});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
-$('adminLoginBtn').onclick=async()=>{try{const {error}=await getSB().auth.signInWithPassword({email:$('adminEmail').value,password:$('adminPassword').value});if(error)throw error;$('adminStatus').textContent='Signed in.';await loadAdmin()}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}};
-$('logout').onclick=()=>getSB().auth.signOut().then(()=>location.reload());
+async function adminCall(action,body={}){const client=await getSB(); const {data:{session}}=await client.auth.getSession(); if(!session) throw new Error('Please sign in as admin.'); const {data,error}=await client.functions.invoke('admin',{body:{action,...body}});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
+$('adminLoginBtn').onclick=async()=>{try{const client=await getSB(); const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value,password:$('adminPassword').value});if(error)throw error;$('adminStatus').textContent='Signed in.';await loadAdmin()}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}};
+$('logout').onclick=async()=>{const client=await getSB(); await client.auth.signOut(); location.reload();};
 async function loadAdmin(){try{await adminCall('stats');$('adminLogin').style.display='none';$('adminPanel').style.display='block';const s=await adminCall('stats');$('stats').innerHTML=`Active drivers: <b>${s.driverCount||0}</b> &nbsp; Total recorded spins: <b>${s.spinCount||0}</b>`;const d=await adminCall('list_drivers');$('driversList').innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Points</th><th>Status</th><th>Action</th></tr>'+d.drivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td><b>${x.points_balance||0}</b>/20 ${x.points_balance>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${x.points_balance>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>'}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{id,active});await loadAdmin()}catch(e){alert(e.message)}};
 window.redeemDriver=async(id)=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{id});alert(`20 points redeemed. Remaining points: ${r.remaining_points||0}`);await loadAdmin()}catch(e){alert(e.message)}};
 $('addDriver').onclick=async()=>{try{await adminCall('add_driver',{trucksbook_id:$('tbid').value,trucksbook_username:$('tbuser').value,display_name:$('display').value,pin:''});alert('Driver registered.');$('tbid').value=$('tbuser').value=$('display').value='';await loadAdmin()}catch(e){alert(e.message)}};
-if(adminSection && configured) getSB().auth.getSession().then(({data})=>{if(data.session)loadAdmin()});
+if(adminSection && configured) getSB().then(client=>client.auth.getSession()).then(({data})=>{if(data.session)loadAdmin()});
 </script></body></html>
