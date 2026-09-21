@@ -19,6 +19,7 @@
       <a href="#about">ABOUT</a>
       <a href="#routes">ROUTES</a>
       <a href="#convoy">CONVOYS</a>
+      <a href="./spinner/index.html" class="spinner-link">🎡 FRIDAY SPINNER</a>
       <a href="#join" class="nav-cta">JOIN US</a>
     </nav>
   </header>
@@ -33,6 +34,7 @@
         <div class="actions">
           <a class="btn primary" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TRUCKERSMP VTC</a>
           <a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">JOIN OUR DISCORD</a>
+          <a class="btn spinner-btn" href="./spinner/index.html">🎡 FRIDAY SPINNER</a>
         </div>
         <div class="hero-stats">
           <div><strong>EU</strong><small>EUROPEAN ROUTES</small></div>
@@ -113,10 +115,18 @@
   <footer>
     <div class="brand footer-brand"><img src="./sirski-logo.png" alt="Sirski Transport logo"><span>SIRSKI TRANSPORT <b>VTC</b></span></div>
     <p>Driven by Passion. Built on Trust.</p>
-    <div class="footer-links"><a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a><a href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">Discord</a></div>
+    <div class="footer-links"><a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a><a href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">Discord</a><a href="./spinner/index.html">Friday Spinner</a></div>
     <small>© 2026 Sirski Transport VTC. Virtual trucking community.</small>
   </footer>
 
+  <script>
+    // Supabase password-recovery links may return to the Site URL. Route recovery links
+    // to the dedicated password page while preserving the recovery code/token.
+    if (location.search.includes('code=') || location.hash.includes('access_token=') || location.hash.includes('type=recovery')) {
+      const target = './reset-password.html' + location.search + location.hash;
+      location.replace(target);
+    }
+  </script>
   <script src="./script.js"></script>
 </body>
 </html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sirski Transport • Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{--bg:#07090d;--panel:#111722;--panel2:#171e2a;--text:#f4f7fb;--muted:#9ca9bb;--gold:#f2c300;--line:#273142;--green:#65d98a;--red:#ff8f98}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#202a3a 0,#0a0d13 48%,#050609 100%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:30px}.brand{display:flex;align-items:center;gap:14px}.brand-logo{width:58px;height:58px;object-fit:contain;border-radius:12px}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}.back{color:#d7e0ec;text-decoration:none;border:1px solid #334052;padding:9px 13px;border-radius:999px}
+.card{background:linear-gradient(180deg,#151515,#0a0a0a);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 18px 60px #0008;margin-bottom:20px}
+h2{margin:0 0 8px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid #344054;background:#0a0f17;color:#fff;outline:none;margin-top:8px}.btn{border:0;border-radius:11px;padding:13px 17px;margin-top:12px;font-weight:900;cursor:pointer;background:var(--gold);color:#070707}.btn.secondary{background:#222c3b;color:#fff}.btn.danger{background:#4a2024;color:#fff}.status{min-height:22px;margin-top:10px;font-size:13px}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}.table th,.table td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#183222;color:var(--green)}.pill.off{background:#342025;color:var(--red)}.actions{display:flex;gap:7px;flex-wrap:wrap}.action{border:1px solid #394659;background:#151d29;color:#dce5ef;border-radius:8px;padding:6px 9px;cursor:pointer}.stats{display:flex;gap:20px;flex-wrap:wrap;margin:16px 0}.stat{background:#0b1119;border:1px solid var(--line);border-radius:12px;padding:12px 15px}.stat b{font-size:20px;color:var(--gold)}@media(max-width:750px){.grid{grid-template-columns:1fr}.top{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport">
+    <div><h1>SIRSKI TRANSPORT</h1><p>Friday Spinner • Admin Panel</p></div>
+  </div>
+  <a class="back" href="index.html">← Back to Spinner</a>
+</header>
+
+<section class="card" id="loginCard">
+  <h2>Admin Sign In</h2>
+  <div class="muted">Only the Sirski Transport administrator account can manage drivers and points.</div>
+  <input id="email" class="input" placeholder="Admin email">
+  <input id="password" class="input" type="password" placeholder="Admin password">
+  <button class="btn" id="login">Sign In</button>
+  <div id="loginStatus" class="status"></div>
+</section>
+
+<section class="card" id="panel" style="display:none">
+  <div style="display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap">
+    <div><h2>Driver Management</h2><div class="muted">Add, activate/deactivate, and redeem points for Sirski Transport drivers.</div></div>
+    <button class="btn secondary" id="logout">Log Out</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <h3>Add Driver</h3>
+  <div class="grid">
+    <input id="tbid" class="input" placeholder="TrucksBook ID">
+    <input id="tbuser" class="input" placeholder="TrucksBook username">
+    <input id="display" class="input" placeholder="Display name">
+  </div>
+  <button class="btn" id="add">＋ Register Driver</button>
+  <div id="addStatus" class="status"></div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="drivers"></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<script>
+const cfg=window.SIRSKI_CONFIG||{};
+const sb=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+async function adminCall(action,body={}){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) throw new Error('Please sign in as administrator.');
+  const {data,error}=await sb.functions.invoke('admin',{body:{action,...body}});
+  if(error) throw new Error(error.message||'Admin function failed.');
+  if(data?.error) throw new Error(data.error);
+  return data;
+}
+
+async function load(){
+  try{
+    const s=await adminCall('stats');
+    $('stats').innerHTML=`<div class="stat">Active drivers<br><b>${s.driverCount||0}</b></div><div class="stat">Recorded spins<br><b>${s.spinCount||0}</b></div>`;
+    const d=await adminCall('list_drivers');
+    $('drivers').innerHTML=(d.drivers||[]).map(x=>`
+      <tr>
+        <td><b>${esc(x.trucksbook_username)}</b></td>
+        <td>${esc(x.display_name)}</td>
+        <td><b>${x.points_balance||0}</b>${x.points_balance>=20?' <span class="pill">Redeemable</span>':''}</td>
+        <td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td>
+        <td class="actions">
+          <button class="action" onclick="toggle('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>
+          ${x.points_balance>=20?`<button class="action" onclick="redeem('${x.id}')">Redeem 20</button>`:''}
+        </td>
+      </tr>`).join('');
+  }catch(e){
+    $('addStatus').textContent=e.message;
+    $('addStatus').style.color='var(--red)';
+  }
+}
+
+$('login').onclick=async()=>{
+  try{
+    $('loginStatus').textContent='Signing in...';
+    const {error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+    if(error) throw error;
+    $('loginCard').style.display='none';$('panel').style.display='block';await load();
+  }catch(e){$('loginStatus').textContent=e.message;$('loginStatus').style.color='var(--red)'}
+};
+
+$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+$('add').onclick=async()=>{
+  try{
+    const id=$('tbid').value.trim(), user=$('tbuser').value.trim(), display=$('display').value.trim()||user;
+    if(!id||!user) throw new Error('TrucksBook ID and username are required.');
+    await adminCall('add_driver',{trucksbook_id:id,trucksbook_username:user,display_name:display});
+    $('addStatus').textContent=`${user} has been registered successfully.`;
+    $('addStatus').style.color='var(--green)';
+    $('tbid').value='';$('tbuser').value='';$('display').value='';
+    await load();
+  }catch(e){$('addStatus').textContent=e.message;$('addStatus').style.color='var(--red)'}
+};
+
+window.toggle=async(id,active)=>{
+  try{await adminCall('set_active',{id,active});await load()}
+  catch(e){alert(e.message)}
+};
+window.redeem=async(id)=>{
+  if(!confirm('Redeem 20 points for this driver?'))return;
+  try{const r=await adminCall('redeem_points',{id});alert(`Redeemed. Remaining points: ${r.remaining_points??0}`);await load()}
+  catch(e){alert(e.message)}
+};
+
+sb.auth.getSession().then(async({data})=>{
+  if(data.session){
+    $('loginCard').style.display='none';$('panel').style.display='block';await load();
+  }
+});
+</script>
+</body>
+</html>
