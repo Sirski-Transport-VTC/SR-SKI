@@ -1,132 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sirski Transport VTC — Driven by Passion. Built on Trust.">
-  <title>Sirski Transport | VTC</title>
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-  <header class="nav">
-    <a class="brand" href="#home" aria-label="Sirski Transport home">
-      <img src="./sirski-logo.png" alt="Sirski Transport logo">
-      <span>SIRSKI TRANSPORT <b>VTC</b></span>
-    </a>
-    <button class="menu" type="button" aria-label="Open navigation">☰</button>
-    <nav>
-      <a href="#home">HOME</a>
-      <a href="#about">ABOUT</a>
-      <a href="#routes">ROUTES</a>
-      <a href="#convoy">CONVOYS</a>
-      <a href="./spinner/index.html" class="spinner-link">🎡 FRIDAY SPINNER</a>
-      <a href="#join" class="nav-cta">JOIN US</a>
-    </nav>
-  </header>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sirski Transport • Friday Spinner</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><style>
+:root{--bg:#07090d;--panel:#111722;--panel2:#171e2a;--text:#f4f7fb;--muted:#9ca9bb;--accent:#f2c300;--gold:#ffd83d;--line:#273142}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#202a3a 0,#0a0d13 48%,#050609 100%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}.wrap{max-width:1100px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{display:flex;align-items:center;gap:14px}.logo{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,#f2c300,#8a6b00);display:grid;place-items:center;font-weight:1000;box-shadow:0 10px 35px #f2c30040}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}.badge{border:1px solid #334052;background:#101722;padding:9px 13px;border-radius:999px;color:#c9d4e2;font-size:12px}.hero{text-align:center;padding:35px 0 18px}.hero h2{font-size:42px;line-height:1;margin:0 0 10px}.hero h2 span{color:var(--accent)}.hero p{color:var(--muted);margin:0}.grid{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:center}.card{background:linear-gradient(180deg,#151515,#0a0a0a);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 18px 60px #0008}.wheelBox{position:relative;width:min(520px,88vw);aspect-ratio:1;margin:auto}.wheel{width:100%;height:100%;border-radius:50%;border:12px solid #222b38;box-shadow:0 0 0 3px #07090d,0 20px 60px #000b;position:relative;overflow:hidden;transition:none;background:conic-gradient(#242424 0 18deg,#2e8b57 18deg 36deg,#303030 36deg 54deg,#303030 54deg 72deg,#e08a00 72deg 90deg,#303030 90deg 108deg,#303030 108deg 126deg,#2e8b57 126deg 144deg,#363636 144deg 162deg,#303030 162deg 180deg,#e08a00 180deg 198deg,#292929 198deg 216deg,#3b3b3b 216deg 234deg,#303030 234deg 252deg,#2e2e2e 252deg 270deg,#303030 270deg 288deg,#b71c1c 288deg 306deg,#393939 306deg 324deg,#303030 324deg 342deg,#303030 342deg 360deg)}.labels{position:absolute;inset:0}.label{position:absolute;left:50%;top:50%;width:112px;height:54px;margin-left:-56px;margin-top:-27px;font-size:10px;line-height:1.12;font-weight:1000;letter-spacing:.15px;text-align:center;display:flex;align-items:center;justify-content:center;transform:rotate(var(--r)) translateY(-145px) rotate(-90deg) rotate(var(--flip));color:#fff;text-shadow:0 2px 4px #000;white-space:normal}.label.p2{color:#111;text-shadow:0 1px 2px #fff}.label.p5{color:#fff}.label.p10{color:#111;text-shadow:0 1px 2px #fff}.label.prize{font-size:12px}.pointer{position:absolute;z-index:5;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:38px solid #fff;filter:drop-shadow(0 4px 6px #000)}.hub{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:82px;height:82px;border-radius:50%;background:#10151e;border:8px solid #d4dbe4;display:grid;place-items:center;font-size:12px;font-weight:900;text-align:center}.form h3{margin:0 0 6px;font-size:23px}.small{font-size:13px;color:var(--muted);line-height:1.5}.input{width:100%;padding:14px 15px;margin-top:10px;border-radius:12px;border:1px solid #344054;background:#0a0f17;color:#fff;outline:none}.input:focus{border-color:#697b94}.btn{width:100%;border:0;border-radius:13px;padding:15px;margin-top:12px;font-weight:900;cursor:pointer;background:var(--accent);color:#070707;box-shadow:0 10px 25px #f2c30030}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.secondary{background:#222c3b;box-shadow:none}.status{min-height:24px;margin-top:12px;color:#cbd6e4;font-size:13px}.result{display:none;text-align:center;margin-top:18px;border:1px solid #3a4554;background:#0a0f17;border-radius:18px;padding:20px}.result .num{font-size:70px;font-weight:1000;color:var(--gold);line-height:1}.notice{margin-top:20px;border-left:3px solid var(--gold);padding:12px 15px;background:#17130a;color:#d9c98d;font-size:13px}.admin{margin-top:35px;display:none}.adminbar{display:flex;gap:10px;flex-wrap:wrap}.table{width:100%;border-collapse:collapse;margin-top:15px;font-size:13px}.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:left}.pill{padding:4px 8px;border-radius:999px;background:#1d2a22;color:#7de09b}.pill.off{background:#2b1d1f;color:#ff9ba0}.link{color:#d7e0ec;text-decoration:none;font-size:12px}.footer{text-align:center;color:#667386;padding:30px 0 10px;font-size:12px}@media(max-width:850px){.grid{grid-template-columns:1fr}.hero h2{font-size:34px}.top{align-items:flex-start}.badge{display:none}}
+</style>
+<style>
+.brand-logo{
+  width:56px;
+  height:56px;
+  object-fit:contain;
+  border-radius:12px;
+  display:block;
+  flex:0 0 auto;
+}
+</style>
 
-  <main>
-    <section id="home" class="hero">
-      <div class="hero-content">
-        <div class="eyebrow">VIRTUAL TRUCKING COMPANY</div>
-        <h1>SIRSKI<br><span>TRANSPORT</span></h1>
-        <div class="hero-sub">Driven by Passion. Built on Trust.</div>
-        <p class="hero-copy">A friendly and professional VTC for drivers who share a passion for trucking, teamwork and the open road. European and US routes. Weekly community convoys every Thursday.</p>
-        <div class="actions">
-          <a class="btn primary" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TRUCKERSMP VTC</a>
-          <a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">JOIN OUR DISCORD</a>
-          <a class="btn spinner-btn" href="./spinner/index.html">🎡 FRIDAY SPINNER</a>
-        </div>
-        <div class="hero-stats">
-          <div><strong>EU</strong><small>EUROPEAN ROUTES</small></div>
-          <div><strong>US</strong><small>AMERICAN ROUTES</small></div>
-          <div><strong>THU</strong><small>WEEKLY CONVOYS</small></div>
-        </div>
-      </div>
-      <div class="scroll">SCROLL TO EXPLORE ↓</div>
-    </section>
-
-    <section id="about" class="section about">
-      <div class="section-label">01 / WHO WE ARE</div>
-      <div class="split">
-        <h2>BUILT FOR<br>THE OPEN ROAD.</h2>
-        <div>
-          <p class="lead">Sirski Transport is a friendly and professional Virtual Trucking Company built for drivers who share a passion for trucking, teamwork and the open road.</p>
-          <p>We operate European and US routes and bring our community together with a weekly convoy every Thursday throughout the year. Whether you are an experienced virtual trucker or looking for a welcoming VTC to grow with, there is a place for you here.</p>
-          <div class="values"><span>PASSION</span><span>TEAMWORK</span><span>TRUST</span><span>RESPECT</span><span>RELIABILITY</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="routes" class="section dark">
-      <div class="section-label">02 / OUR ROUTES</div>
-      <div class="section-head">
-        <h2>ONE VTC.<br>TWO WORLDS.</h2>
-        <p>From European motorways to American highways, our drivers can choose the routes and trucking experience they enjoy most.</p>
-      </div>
-      <div class="route-grid">
-        <article class="route eu">
-          <div class="route-shade"></div>
-          <div class="route-content">
-            <span>EUROPE</span>
-            <h3>EU ROUTES</h3>
-            <p>Cross-border deliveries, busy motorways, scenic country roads and classic European trucking.</p>
-          </div>
-        </article>
-        <article class="route us">
-          <div class="route-shade"></div>
-          <div class="route-content">
-            <span>UNITED STATES</span>
-            <h3>US ROUTES</h3>
-            <p>Long-haul American trucking across highways, cities, states and wide-open landscapes.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section id="convoy" class="section events">
-      <div class="section-label">03 / COMMUNITY</div>
-      <div class="section-head">
-        <h2>THURSDAY<br>CONVOYS.</h2>
-        <p>We keep the wheels turning together. Join our community convoy every Thursday throughout the year whenever you can.</p>
-      </div>
-      <div class="weekly">
-        <div class="big-day"><b>THU</b><span>EVERY WEEK</span></div>
-        <div><h3>WEEKLY SIRSKI TRANSPORT CONVOY</h3><p>Community driving • Teamwork • Fun • Professional VTC standards</p><p class="muted">Check Discord for the latest convoy announcement, route and meeting details.</p></div>
-        <a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">DISCORD</a>
-      </div>
-    </section>
-
-    <section id="join" class="section recruit">
-      <div class="recruit-box">
-        <div class="section-label">04 / RECRUITMENT</div>
-        <h2>JOIN SIRSKI<br><em>TRANSPORT.</em></h2>
-        <p>Ready to take your trucking journey to the next level? Join Sirski Transport and become part of a friendly, professional community driven by passion, teamwork and trust. We welcome drivers for both European and US routes.</p>
-        <ul>
-          <li>TruckersMP</li><li>Discord</li><li>Respectful &amp; Reliable</li><li>Passion for Trucking</li><li>Thursday Convoys</li>
-        </ul>
-        <div class="actions" style="justify-content:center">
-          <a class="btn primary" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">APPLY / JOIN DISCORD</a>
-          <a class="btn ghost" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">VIEW OUR VTC</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="brand footer-brand"><img src="./sirski-logo.png" alt="Sirski Transport logo"><span>SIRSKI TRANSPORT <b>VTC</b></span></div>
-    <p>Driven by Passion. Built on Trust.</p>
-    <div class="footer-links"><a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a><a href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">Discord</a><a href="./spinner/index.html">Friday Spinner</a></div>
-    <small>© 2026 Sirski Transport VTC. Virtual trucking community.</small>
-  </footer>
-
-  <script>
-    // Supabase password-recovery links may return to the Site URL. Route recovery links
-    // to the dedicated password page while preserving the recovery code/token.
-    if (location.search.includes('code=') || location.hash.includes('access_token=') || location.hash.includes('type=recovery')) {
-      const target = './reset-password.html' + location.search + location.hash;
-      location.replace(target);
+</head><body><div class="wrap">
+<header class="top"><div class="brand"><img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p></div></div><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></header>
+<section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
+<div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
+<section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
+<section id="admin" class="admin card"><div class="adminbar"><div><h3 style="margin:0">Admin Dashboard</h3><div class="small">Manage registered TrucksBook participants and review spin history.</div></div><div style="margin-left:auto"><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px">Log out</button></div></div><div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email"><input id="adminPassword" class="input" type="password" placeholder="Admin password"><button id="adminLoginBtn" class="btn">Admin Sign In</button><div id="adminStatus" class="status"></div></div><div id="adminPanel" style="display:none"><div id="stats" class="small" style="margin-top:18px"></div><h4>Add TrucksBook Participant</h4><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><input id="tbid" class="input" placeholder="TrucksBook ID"><input id="tbuser" class="input" placeholder="TrucksBook username"><input id="display" class="input" placeholder="Display name"></div><button id="addDriver" class="btn">Register Driver</button><div id="driversList"></div></div></section>
+<div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw • <a class="link" href="admin.html">Admin</a></div></div>
+<script>
+const cfg=window.SIRSKI_CONFIG||{}; const configured=!!(cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY&&!cfg.SUPABASE_URL.includes('YOUR_')&&!cfg.SUPABASE_ANON_KEY.includes('YOUR_')); let sb=null; let supabaseLoading=null; if(!configured) document.body.insertAdjacentHTML('afterbegin','<div style="background:#6b1117;padding:10px;text-align:center;font-weight:700">Demo mode: configure spinner/config.js for real Friday spins.</div>'); async function loadSupabase(){ if(window.supabase?.createClient) return window.supabase; if(supabaseLoading) return supabaseLoading; const cdns=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js']; supabaseLoading=(async()=>{ for(const src of cdns){ try{ await new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); if(window.supabase?.createClient) return window.supabase; }catch(e){} } throw new Error('Unable to load the Supabase client. Please check your internet connection and reload the page.'); })(); return supabaseLoading; } async function getSB(){ if(!configured) throw new Error('The spinner backend is not configured yet. Demo spins are available. Please configure spinner/config.js for real Friday spins.'); const api=await loadSupabase(); if(!sb) sb=api.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY); return sb; } const $=id=>document.getElementById(id);
+const slots=[
+  {type:'quote',label:'FULL TANK<br>EMPTY WALLET',text:'Full tank, empty wallet — classic trucker math.'},
+  {type:'p2',label:'2 POINTS<br>COFFEE RUN',text:'2 points! Enough for coffee and a short rest stop.'},
+  {type:'quote',label:'NO BRAKES,<br>NO PROBLEM',text:'No brakes? That is not a truck. That is a meeting with destiny. 😅'},
+  {type:'quote',label:'COFFEE<br>FIRST',text:'A trucker without coffee is just a passenger with keys.'},
+  {type:'p5',label:'5 POINTS<br>HEAVY HAUL',text:'5 points! That haul deserves a horn blast. 📯'},
+  {type:'quote',label:'GPS SAYS<br>TURN LEFT',text:'GPS: Turn left. Trucker: Absolutely not. 😂'},
+  {type:'quote',label:'MORE MILES,<br>MORE STORIES',text:'Every long haul comes with a story.'},
+  {type:'p2',label:'2 POINTS<br>COFFEE RUN',text:'2 points! Enough for coffee and a short rest stop.'},
+  {type:'quote',label:'HORN GOES<br>BEEP BEEP',text:'If the horn works, the truck is happy.'},
+  {type:'quote',label:'TRUCK<br>THIRSTY',text:'Fuel light on? Time for the most expensive coffee stop.'},
+  {type:'p5',label:'5 POINTS<br>HEAVY HAUL',text:'5 points! That haul deserves a horn blast. 📯'},
+  {type:'quote',label:'SLEEPY<br>TRUCKER',text:'Eyes heavy? Park it. The load can wait.'},
+  {type:'quote',label:'MIRROR,<br>MIRROR',text:'Mirror check: looking good. Truck check: even better.'},
+  {type:'quote',label:'LONG HAUL,<br>SHORT PATIENCE',text:'The road is long. The patience is sometimes shorter.'},
+  {type:'quote',label:'KEEP<br>ROLLING',text:'Keep rolling, keep smiling, keep the shiny side up.'},
+  {type:'quote',label:'TRUCKER<br>LOGIC',text:'If it fits in the truck, it is probably coming with us.'},
+  {type:'quote',label:'PARKING<br>LOT BOSS',text:'Finding a parking spot is a trucker-level achievement.'},
+  {type:'p10',label:'10 POINTS<br>KING OF ROAD',text:'10 points! Now THAT is a proper haul! 🚛💨'},
+  {type:'quote',label:'DIESEL<br>THERAPY',text:'Some problems need therapy. Some need diesel.'},
+  {type:'quote',label:'HARD HAUL,<br>GOOD VIBES',text:'Heavy load, steady hands, good vibes. 🚛💨'}
+];
+const values=slots.map(s=>s.type==='p2'?2:s.type==='p5'?5:s.type==='p10'?10:0);
+function buildLabels(){ $('labels').innerHTML=slots.map((s,i)=>{const cls=s.type==='quote'?'quote':`${s.type} prize`; const a=i*18+9; const flip=(a>90&&a<270)?'180deg':'0deg'; return `<div class="label ${cls}" style="--r:${a}deg;--flip:${flip}">${s.label}</div>`}).join('') } buildLabels();
+function captionForSlot(slot){return slot.text || (slot.type==='p10'?'10 points! BIG HAUL DELIVERED! 🚛💨':slot.type==='p5'?'5 points! Nice load, driver!':slot.type==='p2'?'2 points! Small haul, still a haul.':'Keep the wheels turning!')}
+function randomQuote(){const q=slots.filter(s=>s.type==='quote');return q[Math.floor(Math.random()*q.length)].text}
+function setStatus(t,bad=false){$('status').textContent=t;$('status').style.color=bad?'#ff8e8e':'#cbd6e4'}
+function captionFor(v){const a=captions[v]||[];return a[Math.floor(Math.random()*a.length)]||''}
+let demoSpins=0;
+function demoCount(){return demoSpins}
+function setDemoCount(n){demoSpins=n}
+function updateButton(){ const u=$('username').value.trim(); const n=demoCount(); $('spinBtn').textContent=u?'SPIN MY FRIDAY CHANCE':(n<5?`TRY DEMO SPIN (${n}/5)`:'ENTER USERNAME TO SPIN'); $('spinBtn').disabled=!u&&n>=5; }
+let currentRotation=0;
+let animationFrame=null;
+function easeOutCubic(t){return 1-Math.pow(1-t,3)}
+function spinAnimation(target,onDone){
+  if(animationFrame) cancelAnimationFrame(animationFrame);
+  const slotAngle=target*18+9;
+  const desired=-slotAngle;
+  let delta=((desired-(currentRotation%360))+360)%360;
+  // Big, exciting spin: 7 full turns in the first 5 seconds, then a smooth 10-second slowdown.
+  delta += 5*360;
+  const start=currentRotation;
+  const total=start+delta;
+  const duration=15000;
+  const fastDuration=5000;
+  const fastAngle=7*360;
+  const slowAngle=delta-fastAngle;
+  const started=performance.now();
+  function frame(now){
+    const elapsed=Math.min(now-started,duration);
+    let angle;
+    if(elapsed<=fastDuration){
+      angle=start+fastAngle*(elapsed/fastDuration);
+    }else{
+      const t=(elapsed-fastDuration)/(duration-fastDuration);
+      angle=start+fastAngle+slowAngle*easeOutCubic(t);
     }
-  </script>
-  <script src="./script.js"></script>
-</body>
-</html>
+    $('wheel').style.transform=`rotate(${angle}deg)`;
+    if(elapsed<duration){ animationFrame=requestAnimationFrame(frame); }
+    else{
+      currentRotation=total;
+      $('wheel').style.transform=`rotate(${total}deg)`;
+      animationFrame=null;
+      if(onDone) onDone();
+    }
+  }
+  animationFrame=requestAnimationFrame(frame);
+}
+
+function demoSpin(){
+  const n=demoCount(); if(n>=5){setStatus('You have used all 5 demo spins. Enter your registered TrucksBook username for the real Friday spin.',true);return;}
+  $('spinBtn').disabled=true;$('result').style.display='none';setStatus(`Demo spin ${n+1} of 5 — no prize is recorded.`);
+  const target=Math.floor(Math.random()*slots.length), slot=slots[target]; spinAnimation(target,()=>{ const display=slot.type==='quote'?'🚛':values[target]; $('prize').textContent=display; $('resultText').textContent=slot.type==='quote'?`DEMO: ${slot.text}`:`DEMO: ${captionForSlot(slot)}`; $('pointsLine').textContent='Demo spin — no points awarded.'; $('result').style.display='block'; setDemoCount(n+1); setStatus(n+1===5?'Demo limit reached. Enter a registered TrucksBook username for your real spin.':'Demo complete.'); $('spinBtn').disabled=false; updateButton(); });
+}
+$('username').addEventListener('input',updateButton); updateButton();
+$('spinBtn').onclick=async()=>{
+  const username=$('username').value.trim();
+  if(!username){demoSpin();return}
+  $('spinBtn').disabled=true;$('result').style.display='none';setStatus('Checking your TrucksBook registration…');
+  try{
+    const {data,error}=await getSB().functions.invoke('spin',{body:{username}});
+    if(error) throw new Error(data?.error||error.message||'Unable to contact the spinner server.');
+    if(data?.error) throw new Error(data.error);
+    const result=data.result||data;
+    const rawSlot=Number(result.slot_index);
+    // The current deployed function returns database slot 1-20 inside data.result.
+    // The final function returns browser slot 0-19 at the top level.
+    const target=(data.result&&Number.isInteger(rawSlot))?rawSlot-1:rawSlot;
+    if(!Number.isInteger(target)||target<0||target>=slots.length) throw new Error('The server returned an invalid wheel result.');
+    const slot=slots[target];
+    const prize=Number(result.prize||0);
+    const totalPoints=Number(result.total_points||0);
+    const redeemable=Boolean(result.redeemable);
+    const driverName=data.driver||data.display_name||username;
+    spinAnimation(target,()=>{
+      $('prize').textContent=slot.type==='quote'?'🚛':prize;
+      $('resultText').textContent=slot.type==='quote'?slot.text:captionForSlot(slot);
+      $('pointsLine').innerHTML=`Your points: <b>${totalPoints}</b> / 20${redeemable?' — <span style="color:#ffd83d">REDEEMABLE!</span>':''}`;
+      $('result').style.display='block';
+      setStatus(redeemable?`Great run, ${driverName}! You reached 20+ points. Your reward is redeemable. Next real spin: Friday.`:`Spin recorded for ${driverName}. Your points carry over to next Friday.`);
+      $('spinBtn').disabled=false; updateButton();
+    });
+  }catch(e){setStatus(e.message||'Unable to spin.',true);$('spinBtn').disabled=false;updateButton()}
+};
+$('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');$('spinBtn').disabled=false };
+const adminSection=location.hash==='#admin'; if(adminSection){$('admin').style.display='block'}
+async function adminCall(action,body={}){const {data:{session}}=await getSB().auth.getSession(); if(!session) throw new Error('Please sign in as admin.'); const {data,error}=await getSB().functions.invoke('admin',{body:{action,...body}});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
+$('adminLoginBtn').onclick=async()=>{try{const {error}=await getSB().auth.signInWithPassword({email:$('adminEmail').value,password:$('adminPassword').value});if(error)throw error;$('adminStatus').textContent='Signed in.';await loadAdmin()}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}};
+$('logout').onclick=()=>getSB().auth.signOut().then(()=>location.reload());
+async function loadAdmin(){try{await adminCall('stats');$('adminLogin').style.display='none';$('adminPanel').style.display='block';const s=await adminCall('stats');$('stats').innerHTML=`Active drivers: <b>${s.driverCount||0}</b> &nbsp; Total recorded spins: <b>${s.spinCount||0}</b>`;const d=await adminCall('list_drivers');$('driversList').innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Points</th><th>Status</th><th>Action</th></tr>'+d.drivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td><b>${x.points_balance||0}</b>/20 ${x.points_balance>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${x.points_balance>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>'}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{id,active});await loadAdmin()}catch(e){alert(e.message)}};
+window.redeemDriver=async(id)=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{id});alert(`20 points redeemed. Remaining points: ${r.remaining_points||0}`);await loadAdmin()}catch(e){alert(e.message)}};
+$('addDriver').onclick=async()=>{try{await adminCall('add_driver',{trucksbook_id:$('tbid').value,trucksbook_username:$('tbuser').value,display_name:$('display').value,pin:''});alert('Driver registered.');$('tbid').value=$('tbuser').value=$('display').value='';await loadAdmin()}catch(e){alert(e.message)}};
+if(adminSection && configured) getSB().auth.getSession().then(({data})=>{if(data.session)loadAdmin()});
+</script></body></html>
