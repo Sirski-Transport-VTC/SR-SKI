@@ -11,17 +11,18 @@
   display:block;
   flex:0 0 auto;
 }
+.back-main{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:8px 12px;border:1px solid #334052;border-radius:10px;background:#101722;color:#d7e0ec;text-decoration:none;font-size:12px;font-weight:800;transition:.2s}.back-main:hover{border-color:#f2c300;color:#ffd83d;background:#151a22}
 </style>
 
 </head><body><div class="wrap">
-<header class="top"><div class="brand"><img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p></div></div><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></header>
+<header class="top"><div class="brand"><img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../">← BACK TO MAIN WEBSITE</a></div></div><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></header>
 <section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
 <div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
 <section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
 <section id="admin" class="admin card"><div class="adminbar"><div><h3 style="margin:0">Admin Dashboard</h3><div class="small">Manage registered TrucksBook participants and review spin history.</div></div><div style="margin-left:auto"><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px">Log out</button></div></div><div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email"><input id="adminPassword" class="input" type="password" placeholder="Admin password"><button id="adminLoginBtn" class="btn">Admin Sign In</button><div id="adminStatus" class="status"></div></div><div id="adminPanel" style="display:none"><div id="stats" class="small" style="margin-top:18px"></div><h4>Add TrucksBook Participant</h4><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><input id="tbid" class="input" placeholder="TrucksBook ID"><input id="tbuser" class="input" placeholder="TrucksBook username"><input id="display" class="input" placeholder="Display name"></div><button id="addDriver" class="btn">Register Driver</button><div id="driversList"></div></div></section>
 <div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw • <a class="link" href="admin.html">Admin</a></div></div>
 <script>
-const cfg=window.SIRSKI_CONFIG||{}; const configured=!!(cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY&&!cfg.SUPABASE_URL.includes('YOUR_')&&!cfg.SUPABASE_ANON_KEY.includes('YOUR_')); let sb=null; if(!configured) document.body.insertAdjacentHTML('afterbegin','<div style="background:#6b1117;padding:10px;text-align:center;font-weight:700">Demo mode: configure spinner/config.js for real Friday spins.</div>'); const getSB=()=>{ if(!configured) throw new Error('The spinner backend is not configured yet. Demo spins are available. Please configure spinner/config.js for real Friday spins.'); if(!sb) sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY); return sb; }; const $=id=>document.getElementById(id);
+const cfg=window.SIRSKI_CONFIG||{}; const configured=!!(cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY&&!cfg.SUPABASE_URL.includes('YOUR_')&&!cfg.SUPABASE_ANON_KEY.includes('YOUR_')); let sb=null; let supabaseLoading=null; if(!configured) document.body.insertAdjacentHTML('afterbegin','<div style="background:#6b1117;padding:10px;text-align:center;font-weight:700">Demo mode: configure spinner/config.js for real Friday spins.</div>'); async function loadSupabase(){ if(window.supabase?.createClient) return window.supabase; if(supabaseLoading) return supabaseLoading; const cdns=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js']; supabaseLoading=(async()=>{ for(const src of cdns){ try{ await new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); if(window.supabase?.createClient) return window.supabase; }catch(e){} } throw new Error('Unable to load the Supabase client. Please check your internet connection and reload the page.'); })(); return supabaseLoading; } async function getSB(){ if(!configured) throw new Error('The spinner backend is not configured yet. Demo spins are available. Please configure spinner/config.js for real Friday spins.'); const api=await loadSupabase(); if(!sb) sb=api.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY); return sb; } const $=id=>document.getElementById(id);
 const slots=[
   {type:'quote',label:'FULL TANK<br>EMPTY WALLET',text:'Full tank, empty wallet — classic trucker math.'},
   {type:'p2',label:'2 POINTS<br>COFFEE RUN',text:'2 points! Enough for coffee and a short rest stop.'},
@@ -104,7 +105,19 @@ $('spinBtn').onclick=async()=>{
   $('spinBtn').disabled=true;$('result').style.display='none';setStatus('Checking your TrucksBook registration…');
   try{
     const {data,error}=await getSB().functions.invoke('spin',{body:{username}});
-    if(error) throw new Error(data?.error||error.message||'Unable to contact the spinner server.');
+    if(error){
+      let message=error.message||'Unable to contact the spinner server.';
+      try{
+        const ctx=error.context;
+        if(ctx && typeof ctx.clone==='function'){
+          const res=ctx.clone();
+          const body=await res.json().catch(()=>null);
+          if(body?.error) message=body.error;
+          else if(body?.message) message=body.message;
+        }
+      }catch(_){}
+      throw new Error(message);
+    }
     if(data?.error) throw new Error(data.error);
     const result=data.result||data;
     const rawSlot=Number(result.slot_index);
