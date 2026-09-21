@@ -104,7 +104,19 @@ $('spinBtn').onclick=async()=>{
   $('spinBtn').disabled=true;$('result').style.display='none';setStatus('Checking your TrucksBook registration…');
   try{
     const {data,error}=await getSB().functions.invoke('spin',{body:{username}});
-    if(error) throw new Error(data?.error||error.message||'Unable to contact the spinner server.');
+    if(error){
+      let message=error.message||'Unable to contact the spinner server.';
+      try{
+        const ctx=error.context;
+        if(ctx && typeof ctx.clone==='function'){
+          const res=ctx.clone();
+          const body=await res.json().catch(()=>null);
+          if(body?.error) message=body.error;
+          else if(body?.message) message=body.message;
+        }
+      }catch(_){}
+      throw new Error(message);
+    }
     if(data?.error) throw new Error(data.error);
     const result=data.result||data;
     const rawSlot=Number(result.slot_index);
