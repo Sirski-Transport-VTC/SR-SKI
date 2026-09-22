@@ -1,27 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Sirski Transport VTC — Driven by Passion. Built on Trust."><title>Sirski Transport | VTC</title>
-<link rel="stylesheet" href="./style.css">
-<style>
-.quick-access{padding:80px 5vw;background:#0b0b0b}.quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:32px}.quick-card{display:flex;flex-direction:column;justify-content:space-between;min-height:190px;padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:linear-gradient(145deg,#151515,#0f0f0f);text-decoration:none;color:inherit;transition:transform .2s ease,border-color .2s ease,background .2s ease}.quick-card:hover{transform:translateY(-4px);border-color:#f2c300;background:linear-gradient(145deg,#1a1a1a,#101010)}.quick-icon{font-size:34px;margin-bottom:14px}.quick-card h3{margin:0 0 8px;font-size:20px}.quick-card p{margin:0 0 20px;opacity:.72;font-size:13px;line-height:1.5}.quick-login{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:11px 14px;border-radius:10px;background:#f2c300;color:#080808;font-size:12px;font-weight:900;letter-spacing:.04em}.quick-card.secondary .quick-login{background:#202020;color:#fff;border:1px solid rgba(255,255,255,.12)}.quick-note{margin-top:18px;opacity:.6;font-size:12px;line-height:1.5}@media(max-width:900px){.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.quick-grid{grid-template-columns:1fr}.quick-access{padding:60px 5vw}}
-</style></head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sirski Transport VTC — Driven by Passion. Built on Trust.">
+  <title>Sirski Transport | VTC</title>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .quick-access{padding:80px 5vw;background:#0b0b0b;border:1px solid #334052;border-radius:24px;margin:40px 5vw;}
+    .quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:32px}
+    .quick-card{display:flex;flex-direction:column;justify-content:space-between;min-height:190px;padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:linear-gradient(145deg,#151515,#0f0f0f);text-decoration:none;color:inherit;transition:transform .2s,border-color .2s,background .2s}
+    .quick-card:hover{transform:translateY(-4px);border-color:#f2c300;background:linear-gradient(145deg,#1a1a1a,#101010)}
+    .quick-icon{font-size:34px;margin-bottom:14px}.quick-card h3{margin:0 0 8px;font-size:20px}.quick-card p{margin:0 0 20px;opacity:.72;font-size:13px;line-height:1.5}
+    .quick-login{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:11px 14px;border-radius:10px;background:#f2c300;color:#080808;font-size:12px;font-weight:900;letter-spacing:.04em}
+    .quick-card.secondary .quick-login{background:#202020;color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .quick-note{margin-top:18px;opacity:.6;font-size:12px;line-height:1.5}
+    .member-bar{display:flex;justify-content:center;margin-top:26px}
+    .member-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:11px;background:#f2c300;color:#080808;text-decoration:none;font-size:12px;font-weight:900}
+    @media(max-width:900px){.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.quick-grid{grid-template-columns:1fr}.quick-access{padding:60px 5vw}}
+  </style>
+</head>
 <body>
-<header class="nav"><a class="brand" href="#home" aria-label="Sirski Transport home"><img src="./sirski-logo.png" alt="Sirski Transport logo"><span>SIRSKI TRANSPORT <b>VTC</b></span></a><button class="menu" type="button" aria-label="Open navigation">☰</button><nav><a href="#home">HOME</a><a href="#about">ABOUT</a><a href="#routes">ROUTES</a><a href="#convoy">CONVOYS</a><a href="#quick-access">DRIVER ACCESS</a><a href="./spinner/index.html" class="spinner-link">🎡 FRIDAY SPINNER</a><a href="#join" class="nav-cta">JOIN US</a></nav></header>
+<header class="nav">
+  <a class="brand" href="#home" aria-label="Sirski Transport home">
+    <img src="./sirski-logo.png" alt="Sirski Transport logo">
+    <span>SIRSKI TRANSPORT <b>VTC</b></span>
+  </a>
+  <button class="menu" type="button" aria-label="Open navigation">☰</button>
+  <nav>
+    <a href="#home">HOME</a>
+    <a href="#about">ABOUT</a>
+    <a href="#routes">ROUTES</a>
+    <a href="#convoy">CONVOYS</a>
+    <a href="#quick-access">DRIVER ACCESS</a>
+    <a href="#join" class="nav-cta">JOIN US</a>
+  </nav>
+</header>
+
 <main>
-<section id="home" class="hero"><div class="hero-content"><div class="eyebrow">VIRTUAL TRUCKING COMPANY</div><h1>SIRSKI<br><span>TRANSPORT</span></h1><div class="hero-sub">Driven by Passion. Built on Trust.</div><p class="hero-copy">A friendly and professional VTC for drivers who share a passion for trucking, teamwork and the open road. European and US routes. Weekly community convoys every Thursday.</p><div class="actions"><a class="btn primary" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TRUCKERSMP VTC</a><a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">JOIN OUR DISCORD</a><a class="btn spinner-btn" href="./spinner/index.html">🎡 FRIDAY SPINNER</a></div><div class="hero-stats"><div><strong>EU</strong><small>EUROPEAN ROUTES</small></div><div><strong>US</strong><small>AMERICAN ROUTES</small></div><div><strong>THU</strong><small>WEEKLY CONVOYS</small></div></div></div><div class="scroll">SCROLL TO EXPLORE ↓</div></section>
-<section id="quick-access" class="section quick-access"><div class="section-label">01 / DRIVER ACCESS</div><div class="section-head"><h2>ONE STOP.<br>EVERYTHING.</h2><p>Quick access to the platforms used by Sirski Transport drivers. Your login is handled directly by the official service.</p></div><div class="quick-grid">
-<a class="quick-card" href="https://trucksbook.eu/users/sign_in" target="_blank" rel="noopener"><div><div class="quick-icon">🚛</div><h3>TRUCKSBOOK</h3><p>Open the official TrucksBook login page for your driver account and company activity.</p></div><span class="quick-login">LOGIN TO TRUCKSBOOK ↗</span></a>
-<a class="quick-card" href="https://vtlog.net/landing" target="_blank" rel="noopener"><div><div class="quick-icon">📋</div><h3>VTLOG</h3><p>Open VTLog and sign in through its official login options for your driving logbook.</p></div><span class="quick-login">LOGIN TO VTLOG ↗</span></a>
-<a class="quick-card secondary" href="./spinner/index.html"><div><div class="quick-icon">🎡</div><h3>FRIDAY SPINNER</h3><p>Registered Sirski Transport drivers can use their weekly Friday spin.</p></div><span class="quick-login">OPEN SPINNER →</span></a>
-<a class="quick-card secondary" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener"><div><div class="quick-icon">🌐</div><h3>TRUCKERSMP VTC</h3><p>Visit the official Sirski Transport VTC page and manage your TruckersMP activity.</p></div><span class="quick-login">OPEN VTC PAGE ↗</span></a>
-</div><p class="quick-note">🔒 Sirski Transport does not collect or store your TrucksBook or VTLog password. Clicking a platform button takes you to its official website, where you sign in yourself.</p></section>
-<section id="about" class="section about"><div class="section-label">02 / WHO WE ARE</div><div class="split"><h2>BUILT FOR<br>THE OPEN ROAD.</h2><div><p class="lead">Sirski Transport is a friendly and professional Virtual Trucking Company built for drivers who share a passion for trucking, teamwork and the open road.</p><p>We operate European and US routes and bring our community together with a weekly convoy every Thursday throughout the year. Whether you are an experienced virtual trucker or looking for a welcoming VTC to grow with, there is a place for you here.</p><div class="values"><span>PASSION</span><span>TEAMWORK</span><span>TRUST</span><span>RESPECT</span><span>RELIABILITY</span></div></div></div></section>
-<section id="routes" class="section dark"><div class="section-label">03 / OUR ROUTES</div><div class="section-head"><h2>ONE VTC.<br>TWO WORLDS.</h2><p>From European motorways to American highways, our drivers can choose the routes and trucking experience they enjoy most.</p></div><div class="route-grid"><article class="route eu"><div class="route-shade"></div><div class="route-content"><span>EUROPE</span><h3>EU ROUTES</h3><p>Cross-border deliveries, busy motorways, scenic country roads and classic European trucking.</p></div></article><article class="route us"><div class="route-shade"></div><div class="route-content"><span>UNITED STATES</span><h3>US ROUTES</h3><p>Long-haul American trucking across highways, cities, states and wide-open landscapes.</p></div></article></div></section>
-<section id="convoy" class="section events"><div class="section-label">04 / COMMUNITY</div><div class="section-head"><h2>THURSDAY<br>CONVOYS.</h2><p>We keep the wheels turning together. Join our community convoy every Thursday throughout the year whenever you can.</p></div><div class="weekly"><div class="big-day"><b>THU</b><span>EVERY WEEK</span></div><div><h3>WEEKLY SIRSKI TRANSPORT CONVOY</h3><p>Community driving • Teamwork • Fun • Professional VTC standards</p><p class="muted">Check Discord for the latest convoy announcement, route and meeting details.</p></div><a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">DISCORD</a></div></section>
-<section id="join" class="section recruit"><div class="recruit-box"><div class="section-label">05 / RECRUITMENT</div><h2>JOIN SIRSKI<br><em>TRANSPORT.</em></h2><p>Ready to take your trucking journey to the next level? Join Sirski Transport and become part of a friendly, professional community driven by passion, teamwork and trust. We welcome drivers for both European and US routes.</p><ul><li>TruckersMP</li><li>Discord</li><li>Respectful &amp; Reliable</li><li>Passion for Trucking</li><li>Thursday Convoys</li></ul><div class="actions" style="justify-content:center"><a class="btn primary" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">APPLY / JOIN DISCORD</a><a class="btn ghost" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">VIEW OUR VTC</a></div></div></section>
+<section id="home" class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">VIRTUAL TRUCKING COMPANY</div>
+    <h1>SIRSKI<br><span>TRANSPORT</span></h1>
+    <div class="hero-sub">Driven by Passion. Built on Trust.</div>
+    <p class="hero-copy">A friendly and professional VTC for drivers who share a passion for trucking, teamwork and the open road. European and US routes. Weekly community convoys every Thursday.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TRUCKERSMP VTC</a>
+      <a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">JOIN OUR DISCORD</a>
+    </div>
+    <div class="hero-stats">
+      <div><strong>EU</strong><small>EUROPEAN ROUTES</small></div>
+      <div><strong>US</strong><small>AMERICAN ROUTES</small></div>
+      <div><strong>THU</strong><small>WEEKLY CONVOYS</small></div>
+    </div>
+  </div>
+  <div class="scroll">SCROLL TO EXPLORE ↓</div>
+</section>
+
+<section id="quick-access" class="section quick-access">
+  <div class="section-label">01 / DRIVER ACCESS</div>
+  <div class="section-head">
+    <h2>ONE STOP.<br>EVERYTHING.</h2>
+    <p>Quick access to the platforms and Sirski member tools used by our drivers.</p>
+  </div>
+
+  <div class="quick-grid">
+    <a class="quick-card" href="https://trucksbook.eu/users/sign_in" target="_blank" rel="noopener">
+      <div><div class="quick-icon">🚛</div><h3>TRUCKSBOOK</h3><p>Open the official TrucksBook login page.</p></div>
+      <span class="quick-login">TRUCKSBOOK LOGIN ↗</span>
+    </a>
+
+    <a class="quick-card" href="https://vtlog.net/landing" target="_blank" rel="noopener">
+      <div><div class="quick-icon">📋</div><h3>VTLOG</h3><p>Open VTLog and sign in through the official service.</p></div>
+      <span class="quick-login">VTLOG LOGIN ↗</span>
+    </a>
+
+    <a class="quick-card" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">
+      <div><div class="quick-icon">🌐</div><h3>TRUCKERSMP</h3><p>Visit the official Sirski Transport VTC page.</p></div>
+      <span class="quick-login">TRUCKERSMP VTC ↗</span>
+    </a>
+
+    <a class="quick-card secondary" href="./spinner/index.html">
+      <div><div class="quick-icon">🎡</div><h3>FRIDAY SPINNER</h3><p>Use your weekly Sirski Transport Friday spin.</p></div>
+      <span class="quick-login">OPEN SPINNER →</span>
+    </a>
+  </div>
+
+  <div class="member-bar">
+    <a class="member-btn" href="./member-login.html">🔐 SIRSKI MEMBER LOGIN</a>
+  </div>
+
+  <p class="quick-note">🔒 TrucksBook and VTLog passwords are entered only on their official websites. Sirski Transport does not collect those passwords.</p>
+</section>
+
+<section id="about" class="section about">
+  <div class="section-label">02 / WHO WE ARE</div>
+  <div class="split">
+    <h2>BUILT FOR<br>THE OPEN ROAD.</h2>
+    <div>
+      <p class="lead">Sirski Transport is a friendly and professional Virtual Trucking Company built for drivers who share a passion for trucking, teamwork and the open road.</p>
+      <p>We operate European and US routes and bring our community together with a weekly convoy every Thursday throughout the year. Whether you are an experienced virtual trucker or looking for a welcoming VTC to grow with, there is a place for you here.</p>
+      <div class="values"><span>PASSION</span><span>TEAMWORK</span><span>TRUST</span><span>RESPECT</span><span>RELIABILITY</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="routes" class="section dark">
+  <div class="section-label">03 / OUR ROUTES</div>
+  <div class="section-head">
+    <h2>ONE VTC.<br>TWO WORLDS.</h2>
+    <p>From European motorways to American highways, our drivers can choose the routes and trucking experience they enjoy most.</p>
+  </div>
+  <div class="route-grid">
+    <article class="route eu"><div class="route-shade"></div><div class="route-content"><span>EUROPE</span><h3>EU ROUTES</h3><p>Cross-border deliveries, busy motorways, scenic country roads and classic European trucking.</p></div></article>
+    <article class="route us"><div class="route-shade"></div><div class="route-content"><span>UNITED STATES</span><h3>US ROUTES</h3><p>Long-haul American trucking across highways, cities, states and wide-open landscapes.</p></div></article>
+  </div>
+</section>
+
+<section id="convoy" class="section events">
+  <div class="section-label">04 / COMMUNITY</div>
+  <div class="section-head">
+    <h2>THURSDAY<br>CONVOYS.</h2>
+    <p>We keep the wheels turning together. Join our community convoy every Thursday throughout the year whenever you can.</p>
+  </div>
+  <div class="weekly">
+    <div class="big-day"><b>THU</b><span>EVERY WEEK</span></div>
+    <div><h3>WEEKLY SIRSKI TRANSPORT CONVOY</h3><p>Community driving • Teamwork • Fun • Professional VTC standards</p><p class="muted">Check Discord for the latest convoy announcement, route and meeting details.</p></div>
+    <a class="btn ghost" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">DISCORD</a>
+  </div>
+</section>
+
+<section id="join" class="section recruit">
+  <div class="recruit-box">
+    <div class="section-label">05 / RECRUITMENT</div>
+    <h2>JOIN SIRSKI<br><em>TRANSPORT.</em></h2>
+    <p>Ready to take your trucking journey to the next level? Join Sirski Transport and become part of a friendly, professional community driven by passion, teamwork and trust. We welcome drivers for both European and US routes.</p>
+    <ul><li>TruckersMP</li><li>Discord</li><li>Respectful &amp; Reliable</li><li>Passion for Trucking</li><li>Thursday Convoys</li></ul>
+    <div class="actions" style="justify-content:center">
+      <a class="btn primary" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">APPLY / JOIN DISCORD</a>
+      <a class="btn ghost" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">VIEW OUR VTC</a>
+    </div>
+  </div>
+</section>
 </main>
-<footer><div class="brand footer-brand"><img src="./sirski-logo.png" alt="Sirski Transport logo"><span>SIRSKI TRANSPORT <b>VTC</b></span></div><p>Driven by Passion. Built on Trust.</p><div class="footer-links"><a href="https://trucksbook.eu/users/sign_in" target="_blank" rel="noopener">TrucksBook Login</a><a href="https://vtlog.net/landing" target="_blank" rel="noopener">VTLog Login</a><a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a><a href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">Discord</a><a href="./spinner/index.html">Friday Spinner</a></div><small>© 2026 Sirski Transport VTC. Virtual trucking community.</small></footer>
-<script>if(location.search.includes('code=')||location.hash.includes('access_token=')||location.hash.includes('type=recovery')){const target='./reset-password.html'+location.search+location.hash;location.replace(target);}</script><script src="./script.js"></script>
-</body></html>
+
+<footer>
+  <div class="brand footer-brand"><img src="./sirski-logo.png" alt="Sirski Transport logo"><span>SIRSKI TRANSPORT <b>VTC</b></span></div>
+  <p>Driven by Passion. Built on Trust.</p>
+  <div class="footer-links">
+    <a href="https://trucksbook.eu/users/sign_in" target="_blank" rel="noopener">TrucksBook</a>
+    <a href="https://vtlog.net/landing" target="_blank" rel="noopener">VTLog</a>
+    <a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a>
+    <a href="./spinner/index.html">Friday Spinner</a>
+    <a href="./member-login.html">Member Login</a>
+  </div>
+  <small>© 2026 Sirski Transport VTC. Virtual trucking community.</small>
+</footer>
+
+<script>
+if (location.search.includes('code=') || location.hash.includes('access_token=') || location.hash.includes('type=recovery')) {
+  location.replace('./reset-password.html' + location.search + location.hash);
+}
+</script>
+<script src="./script.js"></script>
+</body>
+</html>
