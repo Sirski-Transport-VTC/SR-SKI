@@ -15,7 +15,10 @@
 <div class="wrap">
   <div class="top">
     <div class="brand"><img class="logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI MEMBER ADMIN</h1><p>Create and manage individual Sirski Transport member logins.</p></div></div>
-    <button id="logout" class="btn secondary">Log out</button>
+    <div class="actions" style="margin-top:0;justify-content:flex-end">
+      <button id="quickUnlink" class="btn secondary" type="button">UNLINK MEMBER LOGIN</button>
+      <button id="logout" class="btn secondary">Log out</button>
+    </div>
   </div>
 
   <section id="loginCard" class="card login">
@@ -62,6 +65,17 @@
         <button id="generatePassword" class="btn secondary">GENERATE TEMP PASSWORD</button>
       </div>
       <div id="resetStatus" class="status"></div>
+    </section>
+
+    <section id="unlinkCard" class="card">
+      <h2>Unlink Member Login</h2>
+      <p class="small">Use this when a driver is linked to the wrong login, such as an old Gmail-based account. This <b>does not delete the driver</b>, points, or Spinner history. It only removes the login link so you can create the correct <b>@sirski-transport.com</b> account.</p>
+      <div class="row">
+        <label class="label">Linked Member<select id="unlinkDriver" class="input"></select></label>
+        <div class="notice"><b>Safe unlink:</b> the old Supabase login is not deleted. It simply becomes unlinked from the driver and cannot access that driver's member data.</div>
+      </div>
+      <div class="actions"><button id="unlinkMember" class="btn" style="background:#7a2429;color:#fff">UNLINK MEMBER LOGIN</button></div>
+      <div id="unlinkStatus" class="status"></div>
     </section>
 
     <section class="card">
@@ -125,6 +139,9 @@ async function loadDrivers(){
   $("resetDriver").innerHTML=linked.length
     ? linked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
     : '<option value="">No linked member accounts</option>';
+  $("unlinkDriver").innerHTML=linked.length
+    ? linked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
+    : '<option value="">No linked member accounts</option>';
   $("driversTable").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th><th>Recovery Email</th></tr>'+
     drivers.map(d=>`<tr><td>${esc(d.trucksbook_username)}</td><td>${esc(d.display_name||"")}</td><td><b>${Number(d.points_balance||0)}</b>/20</td><td><span class="pill ${d.active?'':'off'}">${d.active?'Active':'Disabled'}</span></td><td>${d.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill neutral">Not linked</span>'}</td><td>${d.recovery_email ? esc(d.recovery_email)+(d.recovery_email_verified_at?' <span class="pill">Verified</span>':' <span class="pill off">Unverified</span>') : '<span class="pill neutral">Not set</span>'}</td></tr>`).join("")+
     '</table>';
@@ -174,6 +191,23 @@ $("resetMember").onclick=async()=>{
     $("resetPassword").value="";
   }catch(e){$("resetStatus").textContent=e.message;$("resetStatus").className="status error";}
   finally{$("resetMember").disabled=false}
+};
+$("quickUnlink").onclick=()=>{document.getElementById("unlinkCard").scrollIntoView({behavior:"smooth",block:"start"});};
+$("unlinkMember").onclick=async()=>{
+  const driver_id=$("unlinkDriver").value;
+  const selected=drivers.find(d=>d.id===driver_id);
+  const m=$("unlinkStatus");
+  m.className="status";
+  if(!driver_id){m.textContent="Select a linked member first.";return}
+  const name=selected?.trucksbook_username||"this member";
+  if(!confirm(`Unlink the Sirski member login for ${name}?\n\nThe driver, points, and Spinner history will be kept. The old login will no longer be linked to this driver.`)) return;
+  $("unlinkMember").disabled=true; m.textContent="Unlinking member login...";
+  try{
+    const r=await adminCall("unlink_member_login",{driver_id});
+    m.textContent=r.message||"Member login unlinked successfully.";
+    await loadDrivers();
+  }catch(e){m.textContent=e.message;m.classList.add("error");}
+  finally{$("unlinkMember").disabled=false}
 };
 $("refresh").onclick=()=>loadDrivers().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
