@@ -5,11 +5,20 @@
 *{box-sizing:border-box}body{margin:0;background:#080a0d;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1000px,92%);margin:0 auto;padding:35px 0 60px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid #29313d;padding-bottom:22px}.brand{display:flex;align-items:center;gap:12px}.logo{width:54px;height:54px;object-fit:contain;border-radius:12px}h1{margin:0;font-size:28px}.muted{color:#9da8b8}button,.btn{border:0;border-radius:10px;padding:11px 15px;background:#202733;color:#fff;font-weight:800;cursor:pointer;text-decoration:none}.gold{background:#f2c300;color:#080808}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}.card{background:#11151b;border:1px solid #29313d;border-radius:18px;padding:24px}.points{grid-column:span 3;text-align:center;padding:35px}.points .number{font-size:72px;font-weight:1000;color:#f2c300;line-height:1;margin:10px 0}.points small{color:#9da8b8}h2{margin:0 0 8px}p{line-height:1.5;color:#aeb8c6;font-size:14px}.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.status{min-height:20px;color:#aeb8c6;margin-top:12px;font-size:13px}
+.form{display:grid;gap:10px;margin-top:16px}.form label{font-size:12px;font-weight:800;color:#cdd5df}.form input{width:100%;padding:13px;border-radius:10px;border:1px solid #344054;background:#090c11;color:#fff;font-size:15px}.danger{background:#5b2222}.success{color:#8fe0a0}.error{color:#ff8d8d}
 @media(max-width:700px){.grid{grid-template-columns:1fr}.points{grid-column:auto}}
 </style></head><body><div class="wrap">
 <div class="top"><div class="brand"><img class="logo" src="./sirski-logo.png" alt=""><div><h1>SIRSKI MEMBER AREA</h1><div id="who" class="muted">Loading...</div></div></div><button id="logout">LOG OUT</button></div>
 <div class="grid">
 <section class="card points"><small>YOUR FRIDAY SPINNER POINTS</small><div id="points" class="number">—</div><div id="driver" class="muted">Loading driver account...</div><p>Points stay in your Sirski Transport account. When you reach 20 points, your reward becomes redeemable according to the VTC reward rules.</p><a class="btn gold" href="./spinner/index.html">🎡 OPEN FRIDAY SPINNER</a></section>
+
+<section class="card"><h2>🔐 Account Security</h2><p>Change your Sirski member password at any time. Your TrucksBook and VTLog passwords are not affected.</p>
+<div class="form">
+<label>NEW PASSWORD</label><input id="newpass" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+<label>CONFIRM NEW PASSWORD</label><input id="confirmpass" type="password" autocomplete="new-password" placeholder="Repeat new password">
+<button id="changePassword" class="gold">CHANGE PASSWORD</button>
+</div><div id="pwmsg" class="status"></div></section>
+
 <section class="card"><h2>🚛 TrucksBook</h2><p>Open your official TrucksBook account.</p><div class="links"><a class="btn gold" href="https://trucksbook.eu/users/sign_in" target="_blank" rel="noopener">LOGIN ↗</a></div></section>
 <section class="card"><h2>📋 VTLog</h2><p>Open your official VTLog account.</p><div class="links"><a class="btn gold" href="https://vtlog.net/landing" target="_blank" rel="noopener">LOGIN ↗</a></div></section>
 <section class="card"><h2>🌐 TruckersMP</h2><p>Visit the Sirski Transport VTC page.</p><div class="links"><a class="btn gold" href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">OPEN VTC ↗</a></div></section>
@@ -29,6 +38,17 @@ async function load(){
  document.getElementById("points").textContent=row.points_balance ?? 0;
  document.getElementById("driver").textContent=(row.display_name || row.trucksbook_username || "Sirski Driver");
 }
+document.getElementById("changePassword").onclick=async()=>{
+ const np=document.getElementById("newpass").value, cp=document.getElementById("confirmpass").value, m=document.getElementById("pwmsg");
+ m.className="status";
+ if(np.length<6){m.textContent="Password must be at least 6 characters.";m.classList.add("error");return}
+ if(np!==cp){m.textContent="Passwords do not match.";m.classList.add("error");return}
+ m.textContent="Changing password...";
+ const {error}=await sb.auth.updateUser({password:np});
+ if(error){m.textContent=error.message;m.classList.add("error");return}
+ document.getElementById("newpass").value="";document.getElementById("confirmpass").value="";
+ m.textContent="Password changed successfully.";m.classList.add("success");
+};
 document.getElementById("logout").onclick=async()=>{await sb.auth.signOut();location.href="./member-login.html"};
 load();
 </script></body></html>
