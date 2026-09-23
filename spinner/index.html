@@ -15,12 +15,12 @@
 </style>
 
 </head><body><div class="wrap">
-<header id="top" class="top"><div class="brand"><img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../">← BACK TO MAIN WEBSITE</a></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></div></header>
+<header id="top" class="top"><div class="brand"><img class="brand-logo" src="../sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../index.html">← BACK TO MAIN WEBSITE</a></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a id="adminDashboardBtn" class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></div></header>
 <section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
 <div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
 <section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
 <section id="admin" class="admin card">
-<div class="adminbar"><div><h3 style="margin:0">Sirski Transport Admin Dashboard</h3><div class="small">Manage drivers, member logins, passwords, and Friday Spinner accounts from one page.</div></div><div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="back-main" href="#top" style="margin-top:0">← BACK TO SPINNER</a><a class="back-main" href="https://sirski-transport.com/admin.html" style="margin-top:0">MEMBER ADMIN</a><a class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px;margin-top:0">LOG OUT</button></div></div>
+<div class="adminbar"><div><h3 style="margin:0">Sirski Transport Admin Dashboard</h3><div class="small">Manage drivers, member logins, passwords, and Friday Spinner accounts from one page.</div></div><div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a id="backToSpinnerBtn" class="back-main" href="#top" style="margin-top:0">← BACK TO SPINNER</a><a class="back-main" href="https://sirski-transport.com/admin.html" style="margin-top:0">MEMBER ADMIN</a><a id="adminDashboardBtn2" class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px;margin-top:0">LOG OUT</button></div></div>
 <div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email" autocomplete="username"><input id="adminPassword" class="input" type="password" placeholder="Admin password" autocomplete="current-password"><button id="adminLoginBtn" class="btn">ADMIN SIGN IN</button><div id="adminStatus" class="status"></div></div>
 <div id="adminPanel" style="display:none"><div id="stats" class="small" style="margin-top:18px"></div>
 <div class="admin-grid">
@@ -152,7 +152,21 @@ $('spinBtn').onclick=async()=>{
   }catch(e){setStatus(e.message||'Unable to spin.',true);$('spinBtn').disabled=false;updateButton()}
 };
 $('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');$('spinBtn').disabled=false };
-const adminSection=location.hash==='#admin'; if(adminSection){$('admin').style.display='block';setTimeout(()=>$('admin').scrollIntoView({behavior:'smooth',block:'start'}),80)}
+const adminSection=false;
+$('adminDashboardBtn')?.addEventListener('click',e=>{
+  e.preventDefault();
+  $('admin').style.display='block';
+  $('admin').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('adminDashboardBtn2')?.addEventListener('click',e=>{
+  e.preventDefault();
+  $('admin').style.display='block';
+  $('admin').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('backToSpinnerBtn')?.addEventListener('click',e=>{
+  e.preventDefault();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
 async function adminCall(action,body={}){const client=await getSB();const {data:{session}}=await client.auth.getSession();if(!session)throw new Error('Please sign in as admin.');const {data,error}=await client.functions.invoke('admin',{body:{action,...body}});if(error){let msg=error.message||'Admin request failed.';try{const ctx=error.context;if(ctx&&typeof ctx.clone==='function'){const res=ctx.clone();const b=await res.json().catch(()=>null);if(b?.error)msg=b.error;}}catch(_){}throw new Error(msg)}if(data?.error)throw new Error(data.error);return data}
 function adminStatus(id,msg,bad=false){$(id).textContent=msg;$(id).style.color=bad?'#ff9ba0':'#cbd6e4'}
 function randomPassword(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';let p='';const a=new Uint32Array(12);crypto.getRandomValues(a);a.forEach(n=>p+=chars[n%chars.length]);return p}
@@ -174,5 +188,10 @@ $("generateResetPassword").onclick=()=>{$('resetPassword').value=randomPassword(
 $("resetMember").onclick=async()=>{const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;if(!driver_id||!new_password){adminStatus('resetStatus','Select a linked member and enter a temporary password.',true);return}if(new_password.length<6){adminStatus('resetStatus','Temporary password must be at least 6 characters.',true);return}try{$('resetMember').disabled=true;adminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});adminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`);$('resetPassword').value=''}catch(e){adminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
 $("unlinkMember").onclick=async()=>{const driver_id=$('unlinkDriver').value;if(!driver_id){adminStatus('unlinkStatus','Select a linked member first.',true);return}const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the Sirski member login for ${d?.trucksbook_username||'this driver'}? The driver, points, and Spinner history will remain.`))return;try{$('unlinkMember').disabled=true;adminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});adminStatus('unlinkStatus','Member login unlinked. The driver and Spinner data were kept.');await loadAdmin()}catch(e){adminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
 $("refreshAdmin").onclick=()=>loadAdmin();
-if(configured) getSB().then(client=>client.auth.getSession()).then(({data})=>{if(data.session){$('admin').style.display='block';loadAdmin();if(adminSection)setTimeout(()=>$('admin').scrollIntoView({behavior:'smooth',block:'start'}),80)}}).catch(()=>{});
+if(configured) getSB().then(client=>client.auth.getSession()).then(({data})=>{
+  if(data.session){
+    $('admin').style.display='block';
+    loadAdmin();
+  }
+}).catch(()=>{});
 </script></body></html>
