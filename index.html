@@ -9,9 +9,10 @@
 @media(max-width:700px){.visual-section{padding:38px 5vw}.visual-card,.visual-card.reverse{grid-template-columns:1fr}.visual-card.reverse .visual-image{order:0}.visual-image{min-height:300px}.visual-copy{padding:34px 26px}.visual-copy h2{font-size:38px}}
 </style>
 
-<style id="sirski-page-switcher">
-  .sirski-page-hidden { display: none !important; }
-  body.sirski-single-page { scroll-behavior: smooth; }
+<style id="sirski-scroll-navigation">
+  html { scroll-behavior: smooth; scroll-padding-top: 86px; }
+  main > section { scroll-margin-top: 86px; }
+  nav a.active { color: #f2c300; }
 </style>
 
 </head>
@@ -20,12 +21,12 @@
 <a class="brand" href="#home"><img src="./sirski-logo.png" alt="Sirski Transport"><span>SIRSKI TRANSPORT <b>VTC</b></span></a>
 <button class="menu" onclick="document.querySelector('.nav nav').classList.toggle('open')">☰</button>
 <nav aria-label="Main navigation">
-  <a href="#home" data-page="home" class="active">HOME</a>
-  <a href="#about" data-page="about">ABOUT</a>
-  <a href="#routes" data-page="routes">ROUTES</a>
-  <a href="#convoys" data-page="convoys">CONVOYS</a>
-  <a href="#driver-access" data-page="driver-access">DRIVER ACCESS</a>
-  <a href="#join" data-page="join" class="join">JOIN US</a>
+  <a href="#home">HOME</a>
+  <a href="#about">ABOUT</a>
+  <a href="#routes">ROUTES</a>
+  <a href="#convoys">CONVOYS</a>
+  <a href="#driver-access">DRIVER ACCESS</a>
+  <a href="#join" class="join">JOIN US</a>
 </nav>
 </header>
 <main>
@@ -48,52 +49,24 @@
 (async()=>{try{const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");const {data}=await sb.auth.getSession();if(data.session){const b=document.getElementById('memberHomeBtn');b.textContent='SIRSKI MEMBER AREA';b.href='./member-dashboard.html'}}catch(e){}})();
 </script>
 
-<script id="sirski-page-switcher-script">
+<script id="sirski-scroll-active">
 (function () {
-  const pages = ["home", "about", "routes", "convoys", "driver-access", "join"];
-  const links = Array.from(document.querySelectorAll("nav a[data-page]"));
+  const links = [...document.querySelectorAll('nav a[href^="#"]')];
+  const sections = links
+    .map(a => document.querySelector(a.getAttribute('href')))
+    .filter(Boolean);
 
-  function showPage(page, updateHash = true) {
-    if (!pages.includes(page)) page = "home";
-
-    pages.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.toggle("sirski-page-hidden", id !== page);
-    });
-
-    links.forEach(link => {
-      link.classList.toggle("active", link.dataset.page === page);
-      if (link.dataset.page === page) {
-        link.setAttribute("aria-current", "page");
-      } else {
-        link.removeAttribute("aria-current");
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(link => link.classList.remove('active'));
+        const active = links.find(link => link.getAttribute('href') === '#' + entry.target.id);
+        if (active) active.classList.add('active');
       }
     });
+  }, { rootMargin: '-25% 0px -60% 0px', threshold: 0 });
 
-    if (updateHash && location.hash !== "#" + page) {
-      history.pushState({ page }, "", "#" + page);
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function currentPage() {
-    const page = location.hash.replace("#", "").trim().toLowerCase();
-    return pages.includes(page) ? page : "home";
-  }
-
-  links.forEach(link => {
-    link.addEventListener("click", function (event) {
-      event.preventDefault();
-      showPage(this.dataset.page, true);
-    });
-  });
-
-  window.addEventListener("popstate", () => showPage(currentPage(), false));
-  window.addEventListener("hashchange", () => showPage(currentPage(), false));
-
-  document.body.classList.add("sirski-single-page");
-  showPage(currentPage(), false);
+  sections.forEach(section => observer.observe(section));
 })();
 </script>
 
