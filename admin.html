@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sirski Transport • Member Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{--bg:#07090d;--panel:#111722;--panel2:#171e2a;--text:#f4f7fb;--muted:#9ca9bb;--accent:#f2c300;--line:#273142;--danger:#ff9ba0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#202a3a 0,#0a0d13 48%,#050609 100%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}.wrap{max-width:1150px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{display:flex;align-items:center;gap:14px}.logo{width:54px;height:54px;border-radius:14px;object-fit:contain}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0;color:var(--muted);font-size:13px}.card{background:linear-gradient(180deg,#151a22,#0b0e13);border:1px solid var(--line);border-radius:22px;padding:24px;margin-top:22px}.input{width:100%;padding:13px 14px;margin-top:7px;border-radius:11px;border:1px solid #344054;background:#0a0f17;color:#fff;outline:none}.input:focus{border-color:#697b94}.label{display:block;font-size:12px;font-weight:800;margin-top:14px}.btn{border:0;border-radius:11px;padding:12px 16px;font-weight:900;cursor:pointer;background:var(--accent);color:#080808}.btn.secondary{background:#222c3b;color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.status{min-height:22px;margin-top:12px;color:#cbd6e4;font-size:13px}.error{color:var(--danger)}.small{color:var(--muted);font-size:13px;line-height:1.5}.table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#1d2a22;color:#7de09b;font-size:11px}.pill.off{background:#2b1d1f;color:#ff9ba0}.pill.neutral{background:#252b35;color:#cbd6e4}.link{color:#d7e0ec;text-decoration:none}.member-form{display:none}.login{max-width:520px;margin:70px auto 0}.notice{border-left:3px solid var(--accent);padding:12px 15px;background:#17130a;color:#d9c98d;font-size:13px;margin-top:15px}.back{display:inline-block;margin-top:18px;color:#aeb8c6;text-decoration:none}@media(max-width:750px){.row{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><img class="logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI MEMBER ADMIN</h1><p>Create and manage individual Sirski Transport member logins.</p></div></div>
+    <button id="logout" class="btn secondary">Log out</button>
+  </div>
+
+  <section id="loginCard" class="card login">
+    <h2>Admin Sign In</h2>
+    <div class="small">Use the existing Sirski administrator account.</div>
+    <label class="label">Admin Email<input id="adminEmail" class="input" type="email"></label>
+    <label class="label">Admin Password<input id="adminPassword" class="input" type="password"></label>
+    <div class="actions"><button id="loginBtn" class="btn">SIGN IN</button></div>
+    <div id="loginStatus" class="status"></div>
+    <a class="back" href="./index.html">← Back to Spinner</a>
+  </section>
+
+  <main id="panel" style="display:none">
+    <section class="card">
+      <h2>Create Sirski Member Login</h2>
+      <p class="small">Select an existing driver. The system prepares a personalized <b>@sirski-transport.com</b> login address. The driver's existing Spinner points remain unchanged.</p>
+      <div class="row">
+        <label class="label">Driver<select id="driver" class="input"></select></label>
+        <label class="label">Sirski Email
+          <div style="display:flex;gap:8px">
+            <input id="email" class="input" type="email" readonly placeholder="driver@sirski-transport.com" style="margin-top:7px">
+            <button id="copyEmail" type="button" class="btn secondary" style="margin-top:7px;white-space:nowrap">COPY</button>
+          </div>
+        </label>
+      </div>
+      <div class="row">
+        <label class="label">Temporary Password<input id="password" class="input" type="password" placeholder="At least 6 characters"></label>
+        <label class="label">Display Name<input id="display" class="input" type="text" placeholder="Optional — uses driver name if blank"></label>
+      </div>
+      <div class="notice"><b>Personalized Sirski login:</b> the address is generated from the driver's TrucksBook username, for example <b>hiyaw@sirski-transport.com</b>. This is a login identity only; no Google Workspace mailbox is required. The password is handled by Supabase Auth.</div>
+      <div class="actions"><button id="create" class="btn">CREATE MEMBER ACCOUNT</button><button id="refresh" class="btn secondary">REFRESH DRIVERS</button></div>
+      <div id="createStatus" class="status"></div>
+    </section>
+
+    <section class="card">
+      <h2>Reset Member Password</h2>
+      <p class="small">Use this when a member forgets their password. Give the member the temporary password, then have them log in and change it from their dashboard.</p>
+      <div class="row">
+        <label class="label">Member Driver<select id="resetDriver" class="input"></select></label>
+        <label class="label">Temporary Password<input id="resetPassword" class="input" type="text" autocomplete="off" placeholder="At least 6 characters"></label>
+      </div>
+      <div class="actions">
+        <button id="resetMember" class="btn">RESET MEMBER PASSWORD</button>
+        <button id="generatePassword" class="btn secondary">GENERATE TEMP PASSWORD</button>
+      </div>
+      <div id="resetStatus" class="status"></div>
+    </section>
+
+    <section class="card">
+      <h2>Driver Accounts</h2>
+      <div class="small">A member can sign in only after their Sirski account is linked to their driver record.</div>
+      <div id="driversTable"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const cfg=window.SIRSKI_CONFIG||{};
+const sb=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+const $=id=>document.getElementById(id);
+let drivers=[];
+
+async function adminCall(action,body={}){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) throw new Error("Please sign in as admin.");
+  const {data,error}=await sb.functions.invoke("admin",{body:{action,...body}});
+  if(error){
+    let msg=error.message||"Admin request failed.";
+    try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}
+    throw new Error(msg);
+  }
+  if(data?.error) throw new Error(data.error);
+  return data;
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+
+
+function makeSirskiEmail(driver){
+  const base=(driver?.trucksbook_username||driver?.display_name||"member")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"")
+    ;
+  return (base||"member")+"@sirski-transport.com";
+}
+function selectedDriver(){
+  const id=$("driver").value;
+  return drivers.find(d=>d.id===id)||null;
+}
+function updateGeneratedEmail(){
+  const d=selectedDriver();
+  $("email").value=d?makeSirskiEmail(d):"";
+}
+
+async function loadDrivers(){
+  const r=await adminCall("list_drivers");
+  drivers=r.drivers||[];
+  $("driver").innerHTML=drivers.map(d=>{
+    const disabled=d.auth_user_id? " disabled":"";
+    return `<option value="${esc(d.id)}"${disabled}>${esc(d.trucksbook_username)} — ${esc(d.display_name||"")} ${d.auth_user_id?"(already linked)":""}</option>`;
+  }).join("");
+  const available=drivers.filter(d=>!d.auth_user_id);
+  if(!available.length) $("driver").innerHTML='<option value="">All drivers already have member accounts</option>';
+  updateGeneratedEmail();
+  const linked=drivers.filter(d=>d.auth_user_id);
+  $("resetDriver").innerHTML=linked.length
+    ? linked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
+    : '<option value="">No linked member accounts</option>';
+  $("driversTable").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th></tr>'+
+    drivers.map(d=>`<tr><td>${esc(d.trucksbook_username)}</td><td>${esc(d.display_name||"")}</td><td><b>${Number(d.points_balance||0)}</b>/20</td><td><span class="pill ${d.active?'':'off'}">${d.active?'Active':'Disabled'}</span></td><td>${d.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill neutral">Not linked</span>'}</td></tr>`).join("")+
+    '</table>';
+}
+$("driver").onchange=updateGeneratedEmail;
+$("copyEmail").onclick=async()=>{
+  const email=$("email").value;
+  if(!email)return;
+  try{await navigator.clipboard.writeText(email);$("createStatus").textContent="Sirski email copied: "+email;}
+  catch(_){$("createStatus").textContent="Email: "+email;}
+};
+$("loginBtn").onclick=async()=>{
+  $("loginStatus").textContent="Signing in...";
+  try{const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});if(error)throw error;$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();$("loginStatus").textContent="";}catch(e){$("loginStatus").textContent=e.message;$("loginStatus").className="status error";}
+};
+$("create").onclick=async()=>{
+  const driver_id=$("driver").value,email=$("email").value.trim(),password=$("password").value,display_name=$("display").value.trim();
+  $("createStatus").className="status";$("createStatus").textContent="";
+  if(!driver_id||!email||!password){$("createStatus").textContent="Driver and password are required.";return}
+  if(password.length<6){$("createStatus").textContent="Password must be at least 6 characters.";return}
+  $("create").disabled=true;$("createStatus").textContent="Creating member account...";
+  try{
+    const r=await adminCall("create_member",{driver_id,email,password,display_name});
+    $("createStatus").textContent=`Member account created for ${r.trucksbook_username||"driver"}. They can now use the Sirski Member Login.`;
+    $("email").value=$("password").value=$("display").value="";
+    await loadDrivers();
+  }catch(e){$("createStatus").textContent=e.message;$("createStatus").className="status error";}
+  finally{$("create").disabled=false}
+};
+$("generatePassword").onclick=()=>{
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let p="";
+  crypto.getRandomValues(new Uint32Array(12)).forEach(n=>p+=chars[n%chars.length]);
+  $("resetPassword").value=p;
+  $("resetStatus").className="status";
+  $("resetStatus").textContent="Temporary password generated. Give it to the member securely.";
+};
+$("resetMember").onclick=async()=>{
+  const driver_id=$("resetDriver").value, new_password=$("resetPassword").value;
+  $("resetStatus").className="status";$("resetStatus").textContent="";
+  if(!driver_id||!new_password){$("resetStatus").textContent="Select a linked member and enter a temporary password.";return}
+  if(new_password.length<6){$("resetStatus").textContent="Temporary password must be at least 6 characters.";return}
+  $("resetMember").disabled=true;$("resetStatus").textContent="Resetting password...";
+  try{
+    const r=await adminCall("reset_member_password",{driver_id,new_password});
+    $("resetStatus").textContent=`Password reset successfully for ${r.trucksbook_username||"member"}. Give the temporary password to the member.`;
+    $("resetPassword").value="";
+  }catch(e){$("resetStatus").textContent=e.message;$("resetStatus").className="status error";}
+  finally{$("resetMember").disabled=false}
+};
+$("refresh").onclick=()=>loadDrivers().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
+$("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await adminCall("stats");$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers()}catch(e){}}})();
+</script>
+</body>
+</html>
