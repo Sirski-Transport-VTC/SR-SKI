@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sirski Transport • Member Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="./config.js"></script>
+<script>
+window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
+  SUPABASE_URL: "https://smlomuibfgezvkmpvstk.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-"
+};
+</script>
 <style>
 :root{--bg:#07090d;--panel:#111722;--panel2:#171e2a;--text:#f4f7fb;--muted:#9ca9bb;--accent:#f2c300;--line:#273142;--danger:#ff9ba0}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#202a3a 0,#0a0d13 48%,#050609 100%);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;min-height:100vh}.wrap{max-width:1150px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{display:flex;align-items:center;gap:14px}.logo{width:54px;height:54px;border-radius:14px;object-fit:contain}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0;color:var(--muted);font-size:13px}.card{background:linear-gradient(180deg,#151a22,#0b0e13);border:1px solid var(--line);border-radius:22px;padding:24px;margin-top:22px}.input{width:100%;padding:13px 14px;margin-top:7px;border-radius:11px;border:1px solid #344054;background:#0a0f17;color:#fff;outline:none}.input:focus{border-color:#697b94}.label{display:block;font-size:12px;font-weight:800;margin-top:14px}.btn{border:0;border-radius:11px;padding:12px 16px;font-weight:900;cursor:pointer;background:var(--accent);color:#080808}.btn.secondary{background:#222c3b;color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.status{min-height:22px;margin-top:12px;color:#cbd6e4;font-size:13px}.error{color:var(--danger)}.small{color:var(--muted);font-size:13px;line-height:1.5}.table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13px}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#1d2a22;color:#7de09b;font-size:11px}.pill.off{background:#2b1d1f;color:#ff9ba0}.pill.neutral{background:#252b35;color:#cbd6e4}.link{color:#d7e0ec;text-decoration:none}.member-form{display:none}.login{max-width:520px;margin:70px auto 0}.notice{border-left:3px solid var(--accent);padding:12px 15px;background:#17130a;color:#d9c98d;font-size:13px;margin-top:15px}.back{display:inline-block;margin-top:18px;color:#aeb8c6;text-decoration:none}@media(max-width:750px){.row{grid-template-columns:1fr}.table{display:block;overflow:auto;white-space:nowrap}}
@@ -25,7 +31,7 @@
     <label class="label">Admin Password<input id="adminPassword" class="input" type="password"></label>
     <div class="actions"><button id="loginBtn" class="btn">SIGN IN</button></div>
     <div id="loginStatus" class="status"></div>
-    <a class="back" href="./index.html">← Back to Spinner</a>
+    <a class="back" href="./spinner/index.html" id="backToSpinner">← Back to Spinner</a>
   </section>
 
   <main id="panel" style="display:none">
