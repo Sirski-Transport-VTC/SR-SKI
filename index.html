@@ -15,6 +15,20 @@
   nav a.active { color: #f2c300; }
 </style>
 
+
+<style id="sirski-footer-links">
+footer .footer-links a {
+  color: #aeb8c6;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color .2s ease;
+}
+footer .footer-links a:hover {
+  color: #f2c300;
+}
+</style>
+
 </head>
 <body>
 <header class="nav">
@@ -44,7 +58,23 @@
 <section id="convoys" class="visual-section"><div class="visual-card"><div class="visual-image convoys-image"></div><div class="visual-copy"><div class="section-label">04 / OUR CONVOYS</div><h2>TOGETHER<br><span>ON THE ROAD.</span></h2><p>Weekly community convoys keep the team connected. Our regular Thursday convoys are a chance to drive together, chat, and enjoy the road as one team.</p><p>Check our Discord for the latest convoy schedule, route and event information.</p><div class="visual-tags"><span>EVERY THURSDAY</span><span>ORGANISED EVENTS</span><span>TEAM SPIRIT</span></div><div class="hero-actions"><a class="hero-btn discord" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">JOIN OUR DISCORD</a></div></div></div></section>
 <section id="join" class="about"><div class="about-inner"><div><div class="section-label">05 / JOIN US</div><h2>JOIN SIRSKI<br>TRANSPORT.</h2></div><div><p>Ready to take your trucking journey to the next level? Join our community and become part of Sirski Transport.</p><div class="hero-actions"><a class="hero-btn discord" href="https://discord.gg/4AYMkbCVT" target="_blank">APPLY / JOIN DISCORD</a><a class="hero-btn tmp" href="https://truckersmp.com/vtc/92246" target="_blank">VIEW OUR VTC</a></div></div></div></section>
 </main>
-<footer class="footer"><div class="footer-inner"><span>© 2026 Sirski Transport VTC. Virtual trucking community.</span><span>Driven by Passion. Built on Trust.</span></div></footer>
+<footer class="footer"><div class="footer-inner"><span>
+<div class="footer-links" style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;margin:20px 0 14px;">
+  <a href="#home">Home</a>
+  <a href="#about">About</a>
+  <a href="#routes">Routes</a>
+  <a href="#convoys">Convoys</a>
+  <a href="#driver-access">Driver Access</a>
+  <a href="#join">Join Us</a>
+  <a href="https://trucksbook.eu/company/49648" target="_blank" rel="noopener">TrucksBook</a>
+  <a href="https://vtlog.net/vtc/8858" target="_blank" rel="noopener">VTLog</a>
+  <a href="https://truckersmp.com/vtc/92246" target="_blank" rel="noopener">TruckersMP</a>
+  <a href="./spinner/index.html">Friday Spinner</a>
+  <a href="./member-login.html">Member Login</a>
+  <a href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener">Discord</a>
+</div>
+
+<small>© 2026 Sirski Transport VTC. Virtual trucking community.</small></span><span>Driven by Passion. Built on Trust.</span></div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 (async()=>{try{const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");const {data}=await sb.auth.getSession();if(data.session){const b=document.getElementById('memberHomeBtn');b.textContent='SIRSKI MEMBER AREA';b.href='./member-dashboard.html'}}catch(e){}})();
 </script>
