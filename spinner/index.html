@@ -14,13 +14,81 @@
 .back-main{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:8px 12px;border:1px solid #334052;border-radius:10px;background:#101722;color:#d7e0ec;text-decoration:none;font-size:12px;font-weight:800;transition:.2s}.back-main:hover{border-color:#f2c300;color:#ffd83d;background:#151a22}
 </style>
 
+
+<style id="integrated-admin-styles">
+.admin-panel{display:none;margin-top:20px}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.admin-card{background:linear-gradient(180deg,#151a22,#0b0e13);border:1px solid var(--line);border-radius:18px;padding:20px}.admin-card h4{margin:0 0 7px;font-size:19px}.admin-card .label{display:block;font-size:12px;font-weight:800;margin-top:12px}.admin-card .input{margin-top:7px}.admin-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.admin-actions .btn{width:auto;margin-top:0}.admin-table-wrap{overflow:auto}.admin-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;min-width:760px}.admin-table th,.admin-table td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.admin-table button{width:auto;padding:7px 9px;margin:0;box-shadow:none}.admin-danger{background:#7e2630!important;color:#fff!important}.admin-note{border-left:3px solid var(--gold);padding:11px 13px;background:#17130a;color:#d9c98d;font-size:12px;line-height:1.45;margin-top:13px}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.stat-box{background:#0a0f17;border:1px solid var(--line);border-radius:14px;padding:13px}.stat-box b{display:block;font-size:24px;color:var(--gold)}.stat-box span{font-size:11px;color:var(--muted)}.admin-header-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.admin-header-actions .btn{width:auto;margin:0}.admin-success{color:#7de09b!important}.admin-error{color:#ff9ba0!important}@media(max-width:850px){.admin-grid{grid-template-columns:1fr}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head><body><div class="wrap">
 <header class="top"><div class="brand"><img class="brand-logo" src="sirski-logo.jpg" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../">← BACK TO MAIN WEBSITE</a></div></div><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></header>
 <section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
 <div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
 <section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
-<section id="admin" class="admin card"><div class="adminbar"><div><h3 style="margin:0">Admin Dashboard</h3><div class="small">Manage registered TrucksBook participants and review spin history.</div></div><div style="margin-left:auto"><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px">Log out</button></div></div><div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email"><input id="adminPassword" class="input" type="password" placeholder="Admin password"><button id="adminLoginBtn" class="btn">Admin Sign In</button><div id="adminStatus" class="status"></div></div><div id="adminPanel" style="display:none"><div id="stats" class="small" style="margin-top:18px"></div><h4>Add TrucksBook Participant</h4><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><input id="tbid" class="input" placeholder="TrucksBook ID"><input id="tbuser" class="input" placeholder="TrucksBook username"><input id="display" class="input" placeholder="Display name"></div><button id="addDriver" class="btn">Register Driver</button><div id="driversList"></div></div></section>
-<div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw • <a class="link" href="admin.html">Admin</a></div></div>
+<section id="admin" class="admin card">
+  <div class="adminbar"><div><h3 style="margin:0">Sirski Transport Admin Dashboard</h3><div class="small">One place to manage TrucksBook drivers, member logins, passwords, links and Spinner points.</div></div><div style="margin-left:auto"><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px">Log out</button></div></div>
+
+  <div id="adminLogin">
+    <div class="admin-card" style="margin-top:18px">
+      <h4>Admin Sign In</h4>
+      <div class="small">Use the existing Sirski administrator account.</div>
+      <input id="adminEmail" class="input" type="email" placeholder="Admin email">
+      <input id="adminPassword" class="input" type="password" placeholder="Admin password">
+      <button id="adminLoginBtn" class="btn">ADMIN SIGN IN</button>
+      <div id="adminStatus" class="status"></div>
+    </div>
+  </div>
+
+  <div id="adminPanel" class="admin-panel">
+    <div id="stats" class="stat-grid"></div>
+
+    <div class="admin-grid">
+      <div class="admin-card">
+        <h4>🚛 Add TrucksBook Driver</h4>
+        <div class="small">Register a new Sirski Transport driver before creating their member login.</div>
+        <label class="label">TrucksBook ID<input id="tbid" class="input" placeholder="TrucksBook ID"></label>
+        <label class="label">TrucksBook Username<input id="tbuser" class="input" placeholder="TrucksBook username"></label>
+        <label class="label">Display Name<input id="tbdisplay" class="input" placeholder="Driver display name"></label>
+        <div class="admin-actions"><button id="addDriver" class="btn">REGISTER DRIVER</button></div>
+        <div id="addDriverStatus" class="status"></div>
+      </div>
+
+      <div class="admin-card">
+        <h4>👤 Create Sirski Member Login</h4>
+        <div class="small">Create the personalized <b>@sirski-transport.com</b> login for an existing driver.</div>
+        <label class="label">Driver<select id="memberDriver" class="input"></select></label>
+        <label class="label">Sirski Email<div style="display:flex;gap:8px"><input id="memberEmail" class="input" type="email" readonly placeholder="driver@sirski-transport.com"><button id="copyMemberEmail" type="button" class="btn secondary" style="width:auto;white-space:nowrap">COPY</button></div></label>
+        <label class="label">Temporary Password<input id="memberPassword" class="input" type="password" placeholder="At least 6 characters"></label>
+        <label class="label">Display Name<input id="memberDisplay" class="input" type="text" placeholder="Optional — uses driver name"></label>
+        <div class="admin-note"><b>Login identity only:</b> no Google Workspace mailbox is required. The password is handled by Supabase Auth.</div>
+        <div class="admin-actions"><button id="createMember" class="btn">CREATE MEMBER ACCOUNT</button><button id="generateMemberPassword" class="btn secondary">GENERATE PASSWORD</button></div>
+        <div id="createMemberStatus" class="status"></div>
+      </div>
+
+      <div class="admin-card">
+        <h4>🔑 Reset Member Password</h4>
+        <div class="small">Give the member the temporary password and have them change it from their dashboard.</div>
+        <label class="label">Member Driver<select id="resetDriver" class="input"></select></label>
+        <label class="label">Temporary Password<input id="resetPassword" class="input" type="text" autocomplete="off" placeholder="At least 6 characters"></label>
+        <div class="admin-actions"><button id="resetMember" class="btn">RESET MEMBER PASSWORD</button><button id="generateResetPassword" class="btn secondary">GENERATE PASSWORD</button></div>
+        <div id="resetStatus" class="status"></div>
+      </div>
+
+      <div class="admin-card">
+        <h4>🔗 Unlink Member Login</h4>
+        <div class="small">Use this when a driver is linked to the wrong login, such as an old Gmail-based account.</div>
+        <label class="label">Linked Member<select id="unlinkDriver" class="input"></select></label>
+        <div class="admin-note"><b>Safe unlink:</b> the old Supabase login is not deleted. It is simply unlinked from the driver and cannot access that driver's member data. The driver, points and Spinner history remain.</div>
+        <div class="admin-actions"><button id="unlinkMember" class="btn admin-danger">UNLINK MEMBER LOGIN</button></div>
+        <div id="unlinkStatus" class="status"></div>
+      </div>
+    </div>
+
+    <div class="admin-card" style="margin-top:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h4>👥 Driver Accounts</h4><div class="small">Manage driver status, points and member-account links.</div></div><button id="refreshAdmin" class="btn secondary" style="width:auto">REFRESH</button></div>
+      <div id="driversList" class="admin-table-wrap"></div>
+    </div>
+  </div>
+</section>
+<div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw • <a class="link" href="#admin">Admin</a></div></div>
 <script>
 const cfg=window.SIRSKI_CONFIG||{}; const configured=!!(cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY&&!cfg.SUPABASE_URL.includes('YOUR_')&&!cfg.SUPABASE_ANON_KEY.includes('YOUR_')); let sb=null; let supabaseLoading=null; if(!configured) document.body.insertAdjacentHTML('afterbegin','<div style="background:#6b1117;padding:10px;text-align:center;font-weight:700">Demo mode: configure spinner/config.js for real Friday spins.</div>'); async function loadSupabase(){ if(window.supabase?.createClient) return window.supabase; if(supabaseLoading) return supabaseLoading; const cdns=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js']; supabaseLoading=(async()=>{ for(const src of cdns){ try{ await new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); if(window.supabase?.createClient) return window.supabase; }catch(e){} } throw new Error('Unable to load the Supabase client. Please check your internet connection and reload the page.'); })(); return supabaseLoading; } async function getSB(){ if(!configured) throw new Error('The spinner backend is not configured yet. Demo spins are available. Please configure spinner/config.js for real Friday spins.'); const api=await loadSupabase(); if(!sb) sb=api.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY); return sb; } const $=id=>document.getElementById(id);
 const slots=[
@@ -142,13 +210,40 @@ $('spinBtn').onclick=async()=>{
 };
 $('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');$('spinBtn').disabled=false };
 const adminSection=location.hash==='#admin'; if(adminSection){$('admin').style.display='block'}
-async function adminCall(action,body={}){const client=await getSB(); const {data:{session}}=await client.auth.getSession(); if(!session) throw new Error('Please sign in as admin.'); const {data,error}=await client.functions.invoke('admin',{body:{action,...body}});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
-$('adminLoginBtn').onclick=async()=>{try{const client=await getSB(); const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value,password:$('adminPassword').value});if(error)throw error;$('adminStatus').textContent='Signed in.';await loadAdmin()}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}};
-$('logout').onclick=async()=>{const client=await getSB(); await client.auth.signOut(); location.reload();};
-async function loadAdmin(){try{await adminCall('stats');$('adminLogin').style.display='none';$('adminPanel').style.display='block';const s=await adminCall('stats');$('stats').innerHTML=`Active drivers: <b>${s.driverCount||0}</b> &nbsp; Total recorded spins: <b>${s.spinCount||0}</b>`;const d=await adminCall('list_drivers');$('driversList').innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Points</th><th>Status</th><th>Action</th></tr>'+d.drivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td><b>${x.points_balance||0}</b>/20 ${x.points_balance>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${x.points_balance>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>'}catch(e){$('adminStatus').textContent=e.message;$('adminStatus').style.color='#ff9ba0'}}
+async function adminCall(action,body={}){const client=await getSB(); const {data:{session}}=await client.auth.getSession(); if(!session) throw new Error('Please sign in as admin.'); const {data,error}=await client.functions.invoke('admin',{body:{action,...body}});if(error){let msg=error.message||'Admin request failed.';try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}throw new Error(msg)}if(data?.error)throw new Error(data.error);return data}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{id,active});await loadAdmin()}catch(e){alert(e.message)}};
-window.redeemDriver=async(id)=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{id});alert(`20 points redeemed. Remaining points: ${r.remaining_points||0}`);await loadAdmin()}catch(e){alert(e.message)}};
-$('addDriver').onclick=async()=>{try{await adminCall('add_driver',{trucksbook_id:$('tbid').value,trucksbook_username:$('tbuser').value,display_name:$('display').value,pin:''});alert('Driver registered.');$('tbid').value=$('tbuser').value=$('display').value='';await loadAdmin()}catch(e){alert(e.message)}};
-if(adminSection && configured) getSB().then(client=>client.auth.getSession()).then(({data})=>{if(data.session)loadAdmin()});
+let adminDrivers=[];
+function makeSirskiEmail(driver){const base=(driver?.trucksbook_username||driver?.display_name||'member').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'');return (base||'member')+'@sirski-transport.com'}
+function selectedMemberDriver(){return adminDrivers.find(d=>d.id===$('memberDriver').value)||null}
+function updateMemberEmail(){const d=selectedMemberDriver();$('memberEmail').value=d?makeSirskiEmail(d):''}
+function randomPassword(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';let p='';crypto.getRandomValues(new Uint32Array(12)).forEach(n=>p+=chars[n%chars.length]);return p}
+function setAdminStatus(id,text,bad=false){const el=$(id);el.textContent=text;el.className='status '+(bad?'admin-error':'admin-success')}
+async function loadAdmin(){
+  try{
+    const [stats,dlist]=await Promise.all([adminCall('stats'),adminCall('list_drivers')]);
+    adminDrivers=dlist.drivers||[];
+    $('stats').innerHTML=`<div class="stat-box"><b>${stats.total_drivers||0}</b><span>TOTAL DRIVERS</span></div><div class="stat-box"><b>${stats.active_drivers||0}</b><span>ACTIVE DRIVERS</span></div><div class="stat-box"><b>${stats.linked_members||0}</b><span>MEMBER LOGINS</span></div><div class="stat-box"><b>${stats.total_points||0}</b><span>TOTAL POINTS</span></div>`;
+    const available=adminDrivers.filter(d=>!d.auth_user_id);
+    $('memberDriver').innerHTML=available.length?available.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">All drivers already have member accounts</option>';
+    updateMemberEmail();
+    const linked=adminDrivers.filter(d=>d.auth_user_id);
+    $('resetDriver').innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';
+    $('unlinkDriver').innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';
+    $('driversList').innerHTML='<table class="admin-table"><tr><th>TrucksBook</th><th>ID</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th><th>Actions</th></tr>'+adminDrivers.map(d=>`<tr><td>${escapeHtml(d.trucksbook_username)}</td><td>${escapeHtml(d.trucksbook_id)}</td><td>${escapeHtml(d.display_name||'')}</td><td><b>${Number(d.points_balance||0)}</b>/20 ${Number(d.points_balance||0)>=20?'<span class="pill">Redeemable</span>':''}</td><td><span class="pill ${d.active?'':'off'}">${d.active?'Active':'Disabled'}</span></td><td>${d.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td><td><button class="btn secondary" onclick="toggleDriver('${escapeHtml(d.id)}',${!d.active})">${d.active?'Disable':'Enable'}</button>${Number(d.points_balance||0)>=20?` <button class="btn secondary" onclick="redeemDriver('${escapeHtml(d.id)}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>';
+  }catch(e){setAdminStatus('adminStatus',e.message,true)}
+}
+$('adminLoginBtn').onclick=async()=>{try{setAdminStatus('adminStatus','Signing in...');const {error}=await getSB().auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(error)throw error;$('adminLogin').style.display='none';$('adminPanel').style.display='block';await loadAdmin();setAdminStatus('adminStatus','')}catch(e){setAdminStatus('adminStatus',e.message,true)}};
+$('logout').onclick=async()=>{try{await getSB().auth.signOut()}finally{location.reload()}};
+$('memberDriver').onchange=updateMemberEmail;
+$('copyMemberEmail').onclick=async()=>{const email=$('memberEmail').value;if(!email)return;try{await navigator.clipboard.writeText(email);setAdminStatus('createMemberStatus','Sirski email copied: '+email)}catch(_){setAdminStatus('createMemberStatus','Email: '+email)}};
+$('generateMemberPassword').onclick=()=>{$('memberPassword').value=randomPassword();setAdminStatus('createMemberStatus','Temporary password generated. Give it to the member securely.')};
+$('generateResetPassword').onclick=()=>{$('resetPassword').value=randomPassword();setAdminStatus('resetStatus','Temporary password generated. Give it to the member securely.')};
+$('addDriver').onclick=async()=>{try{$('addDriver').disabled=true;setAdminStatus('addDriverStatus','Registering driver...');const r=await adminCall('add_driver',{trucksbook_id:$('tbid').value.trim(),trucksbook_username:$('tbuser').value.trim(),display_name:$('tbdisplay').value.trim(),pin:''});$('tbid').value=$('tbuser').value=$('tbdisplay').value='';setAdminStatus('addDriverStatus',`Driver registered: ${r.driver?.trucksbook_username||'driver'}.`);await loadAdmin()}catch(e){setAdminStatus('addDriverStatus',e.message,true)}finally{$('addDriver').disabled=false}};
+$('createMember').onclick=async()=>{const driver_id=$('memberDriver').value,email=$('memberEmail').value.trim(),password=$('memberPassword').value,display_name=$('memberDisplay').value.trim();try{if(!driver_id||!email||!password)throw new Error('Driver and temporary password are required.');if(password.length<6)throw new Error('Password must be at least 6 characters.');$('createMember').disabled=true;setAdminStatus('createMemberStatus','Creating member account...');const r=await adminCall('create_member',{driver_id,email,password,display_name});$('memberPassword').value=$('memberDisplay').value='';setAdminStatus('createMemberStatus',`Member account created for ${r.email||email}.`);await loadAdmin()}catch(e){setAdminStatus('createMemberStatus',e.message,true)}finally{$('createMember').disabled=false}};
+$('resetMember').onclick=async()=>{const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;try{if(!driver_id||!new_password)throw new Error('Select a linked member and enter a temporary password.');if(new_password.length<6)throw new Error('Temporary password must be at least 6 characters.');$('resetMember').disabled=true;setAdminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});$('resetPassword').value='';setAdminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`)}catch(e){setAdminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
+$('unlinkMember').onclick=async()=>{const driver_id=$('unlinkDriver').value;if(!driver_id)return;const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the member login for ${d?.trucksbook_username||'this driver'}? The login itself will NOT be deleted.`))return;try{$('unlinkMember').disabled=true;setAdminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});setAdminStatus('unlinkStatus','Member login unlinked. Driver, points and Spinner history remain.');await loadAdmin()}catch(e){setAdminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
+$('refreshAdmin').onclick=()=>loadAdmin();
+window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{driver_id:id,active});await loadAdmin()}catch(e){alert(e.message)}};
+window.redeemDriver=async(id)=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{driver_id:id});alert(`20 points redeemed. Remaining points: ${r.result?.remaining_points??r.remaining_points??0}`);await loadAdmin()}catch(e){alert(e.message)}};
+if(adminSection && configured)getSB().then(client=>client.auth.getSession()).then(({data})=>{if(data.session){$('adminLogin').style.display='none';$('adminPanel').style.display='block';loadAdmin()}}).catch(()=>{});
 </script></body></html>
