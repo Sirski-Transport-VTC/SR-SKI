@@ -261,7 +261,9 @@ async function loadAdminGallery(){
 
       const meta=document.createElement("div");
       meta.className="admin-gallery-meta";
-      meta.textContent=(row.member_name?row.member_name+" • ":"")+"Uploaded: "+new Date(row.created_at).toLocaleString();
+      const uploader=drivers.find(d=>d.auth_user_id===row.user_id);
+      const uploaderName=uploader?.display_name||uploader?.trucksbook_username||"Sirski Member";
+      meta.textContent=uploaderName+" • Uploaded: "+new Date(row.created_at).toLocaleString();
 
       const del=document.createElement("button");
       del.className="btn secondary";
