@@ -140,6 +140,7 @@ document.getElementById("galleryUpload").onclick=async()=>{
     const ins=await sb.from("member_gallery").insert({
       user_id:gallerySession.user.id,
       image_path:path,
+      created_at:new Date().toISOString(),
       caption:document.getElementById("galleryCaption").value.trim()||null
     });
     if(ins.error){
