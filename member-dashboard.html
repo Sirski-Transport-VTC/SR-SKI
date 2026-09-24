@@ -1,22 +1,159 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Sirski Member Area</title><style>*{box-sizing:border-box}body{margin:0;background:#080a0d;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:auto;padding:24px 0 50px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #29313d;padding-bottom:18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:54px;height:54px;object-fit:contain;border-radius:12px}h1{margin:0;font-size:25px}.muted{color:#9da8b8;font-size:13px}button,.btn{border:0;border-radius:10px;padding:11px 15px;background:#202733;color:#fff;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block}.gold{background:#f2c300;color:#080808}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.card{background:#11151b;border:1px solid #29313d;border-radius:17px;padding:24px}.points{grid-column:1/-1;text-align:center;padding:28px}.points .number{font-size:68px;font-weight:1000;color:#f2c300;line-height:1;margin:8px 0}.points p{max-width:650px;margin:12px auto;color:#aeb8c6;font-size:13px;line-height:1.5}h2{margin:0 0 10px;font-size:24px}p{color:#aeb8c6;line-height:1.5;font-size:14px}.form{display:grid;gap:9px;margin-top:14px}.form label{font-size:12px;font-weight:900;color:#cdd5df}.form input{width:100%;padding:13px;border-radius:10px;border:1px solid #344054;background:#090c11;color:#fff;font-size:15px}.status{min-height:20px;color:#aeb8c6;margin-top:10px;font-size:13px}.success{color:#8fe0a0}.error{color:#ff8d8d}.verified{color:#7eea91;font-weight:900}.pending{color:#f2c300;font-weight:900}.platform{min-height:205px}.platform-icon{width:70px;height:70px;display:grid;place-items:center;border-radius:8px;margin-bottom:13px;font-weight:1000;overflow:hidden}.platform-logo{width:100%;height:100%;object-fit:contain;display:block}.tbicon{background:#3d79bd;font-size:27px}.vticon{background:#0b0b0b;color:#f39b00;font-size:38px}.tmpicon{background:#fff;color:#111;font-size:12px;line-height:1.05}.steamicon{background:linear-gradient(145deg,#203b5b,#0e1722);font-size:16px}.epicicon{background:#fff;color:#111;font-size:15px;line-height:1.05}.platform-logo-wrap{background:#fff}.epic-logo-wrap{padding:4px}.spinicon{background:transparent;font-size:48px}.platform .btn{margin-top:5px}.back-main{color:#f2c300;font-size:12px;font-weight:900}.security-note{grid-column:1/-1;text-align:center;color:#8d98a8;font-size:12px;margin-top:2px}.logout{background:#202733}@media(max-width:800px){.grid{grid-template-columns:1fr}.points{grid-column:auto}} </style></head><body><div class="wrap"><div class="top"><div class="brand"><img class="logo" src="./sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI MEMBER AREA</h1><div id="who" class="muted">Loading...</div></div></div><div style="display:flex;gap:10px;align-items:center"><a class="back-main" href="./">← MAIN WEBSITE</a><button id="logout" class="logout">LOG OUT</button></div></div><div class="grid">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Sirski Member Area</title><style>*{box-sizing:border-box}body{margin:0;background:#080a0d;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:auto;padding:24px 0 50px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #29313d;padding-bottom:18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:54px;height:54px;object-fit:contain;border-radius:12px}h1{margin:0;font-size:25px}.muted{color:#9da8b8;font-size:13px}button,.btn{border:0;border-radius:10px;padding:11px 15px;background:#202733;color:#fff;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block}.gold{background:#f2c300;color:#080808}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.card{background:#11151b;border:1px solid #29313d;border-radius:17px;padding:24px}.points{grid-column:1/-1;text-align:center;padding:28px}.points .number{font-size:68px;font-weight:1000;color:#f2c300;line-height:1;margin:8px 0}.points p{max-width:650px;margin:12px auto;color:#aeb8c6;font-size:13px;line-height:1.5}h2{margin:0 0 10px;font-size:24px}p{color:#aeb8c6;line-height:1.5;font-size:14px}.form{display:grid;gap:9px;margin-top:14px}.form label{font-size:12px;font-weight:900;color:#cdd5df}.form input{width:100%;padding:13px;border-radius:10px;border:1px solid #344054;background:#090c11;color:#fff;font-size:15px}.status{min-height:20px;color:#aeb8c6;margin-top:10px;font-size:13px}.success{color:#8fe0a0}.error{color:#ff8d8d}.verified{color:#7eea91;font-weight:900}.pending{color:#f2c300;font-weight:900}.platform{min-height:205px}.platform-icon{width:70px;height:70px;display:grid;place-items:center;border-radius:8px;margin-bottom:13px;font-weight:1000}.tbicon{background:#3d79bd;font-size:27px}.vticon{background:#0b0b0b;color:#f39b00;font-size:38px}.tmpicon{background:#fff;color:#111;font-size:12px;line-height:1.05}.steamicon{background:linear-gradient(145deg,#203b5b,#0e1722);font-size:16px}.epicicon{background:#fff;color:#111;font-size:15px;line-height:1.05}.spinicon{background:transparent;font-size:48px}.platform .btn{margin-top:5px}.back-main{color:#f2c300;font-size:12px;font-weight:900}.security-note{grid-column:1/-1;text-align:center;color:#8d98a8;font-size:12px;margin-top:2px}.logout{background:#202733}@media(max-width:800px){.grid{grid-template-columns:1fr}.points{grid-column:auto}} </style><style>
+/* SIRSKI MEMBER GALLERY */
+.gallery-section{grid-column:1/-1}
+.gallery-upload{display:grid;grid-template-columns:1.1fr 1fr auto;gap:10px;align-items:end;margin-top:14px}
+.gallery-upload .field{margin:0}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.gallery-item{background:#0b0f14;border:1px solid #29313d;border-radius:14px;overflow:hidden}
+.gallery-item img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.gallery-item-body{padding:13px}
+.gallery-caption{font-weight:800;min-height:20px}
+.gallery-date{font-size:11px;color:#7f8a99;margin-top:6px}
+.gallery-item button{margin-top:10px}
+.gallery-empty{padding:20px 0;color:#9da8b8;font-size:13px}
+@media(max-width:900px){
+  .gallery-upload{grid-template-columns:1fr 1fr}
+  .gallery-upload button{grid-column:1/-1}
+  .gallery-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){
+  .gallery-upload{grid-template-columns:1fr}
+  .gallery-upload button{grid-column:auto}
+  .gallery-grid{grid-template-columns:1fr}
+}
+</style></head><body><div class="wrap"><div class="top"><div class="brand"><img class="logo" src="./sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI MEMBER AREA</h1><div id="who" class="muted">Loading...</div></div></div><div style="display:flex;gap:10px;align-items:center"><a class="back-main" href="./">← MAIN WEBSITE</a><button id="logout" class="logout">LOG OUT</button></div></div><div class="grid">
 <section class="card points"><small>YOUR FRIDAY SPINNER POINTS</small><div id="points" class="number">—</div><div id="driver" class="muted">Loading driver account...</div><p>Points stay in your Sirski Transport account. When you reach 20 points, your reward becomes redeemable according to the VTC reward rules.</p><a class="btn gold" href="./spinner/index.html">🎡 OPEN FRIDAY SPINNER</a></section>
 <section class="card"><h2>🔐 Account Security</h2><p>Change your Sirski member password at any time. Your TrucksBook and VTLog passwords are not affected.</p><div class="form"><label>NEW PASSWORD</label><input id="newpass" type="password" autocomplete="new-password" placeholder="At least 6 characters"><label>CONFIRM NEW PASSWORD</label><input id="confirmpass" type="password" autocomplete="new-password" placeholder="Repeat new password"><button id="changePassword" class="gold">CHANGE PASSWORD</button></div><div id="pwmsg" class="status"></div></section>
 <section class="card"><h2>📧 Password Recovery</h2><p>Use your personal Gmail or other private email as the recovery address. This is only for recovering your Sirski password; it does not become your Sirski login.</p><div id="recoveryStatus" class="status">Checking...</div><div class="form"><label>PERSONAL RECOVERY EMAIL</label><input id="recoveryEmail" type="email" autocomplete="email" placeholder="yourname@gmail.com"><label>CURRENT SIRSKI PASSWORD</label><input id="currentPassword" type="password" autocomplete="current-password" placeholder="Required to change recovery email"><button id="sendCode" class="gold">SEND VERIFICATION CODE</button><label>6-DIGIT VERIFICATION CODE</label><input id="code" inputmode="numeric" maxlength="6" placeholder="123456"><button id="verifyCode">VERIFY RECOVERY EMAIL</button></div><div id="recoveryMsg" class="status"></div></section>
-<section class="card platform"><div class="platform-icon platform-logo-wrap"><img class="platform-logo" src="https://cdn.brandfetch.io/idhIr7anN7/w/500/h/500/theme/dark/icon.jpeg?c=1bxid64Mup7aczewSAYMX&t=1768324666840" alt="TrucksBook logo"></div><h2>TrucksBook</h2><p>Open your official TrucksBook account.</p><a class="btn gold" href="https://trucksbook.eu/company/49648" target="_blank">LOGIN ↗</a></section>
-<section class="card platform"><div class="platform-icon platform-logo-wrap vt-logo-wrap"><img class="platform-logo" src="./vtlog-logo.png" alt="VTLog logo"></div><h2>VTLog</h2><p>Open your official VTLog account.</p><a class="btn gold" href="https://vtlog.net/vtc/8858" target="_blank">LOGIN ↗</a></section>
+
+<section class="card gallery-section">
+  <h2>📸 Sirski Member Gallery</h2>
+  <p>Share your trucking screenshots with the Sirski community. JPG, PNG or WebP only; images are compressed automatically.</p>
+  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+    <small style="color:#8d98a8">Maximum 5 MB per upload</small>
+  </div>
+  <div class="gallery-upload">
+    <input id="galleryFile" class="field" type="file" accept="image/jpeg,image/png,image/webp">
+    <input id="galleryCaption" class="field" maxlength="120" placeholder="Caption (optional)">
+    <button id="galleryUpload" class="btn gold" type="button">UPLOAD SCREENSHOT</button>
+  </div>
+  <div id="galleryStatus" class="status"></div>
+  <div id="galleryGrid" class="gallery-grid"></div>
+  <div id="galleryEmpty" class="gallery-empty">Loading gallery...</div>
+</section>
+
+<section class="card platform"><div class="platform-icon tbicon">TB</div><h2>TrucksBook</h2><p>Open your official TrucksBook account.</p><a class="btn gold" href="https://trucksbook.eu/company/49648" target="_blank">LOGIN ↗</a></section>
+<section class="card platform"><div class="platform-icon vticon">V</div><h2>VTLog</h2><p>Open your official VTLog account.</p><a class="btn gold" href="https://vtlog.net/vtc/8858" target="_blank">LOGIN ↗</a></section>
 <section class="card platform"><div class="platform-icon tmpicon">TRUCKERS<br>MP</div><h2>TruckersMP</h2><p>Visit the official Sirski Transport VTC page.</p><a class="btn gold" href="https://truckersmp.com/vtc/92246" target="_blank">OPEN VTC ↗</a></section>
 <section class="card platform"><div class="platform-icon steamicon">STEAM</div><h2>Steam</h2><p>Open your official Steam account.</p><a class="btn gold" href="https://store.steampowered.com/" target="_blank">LOGIN ↗</a></section>
-<section class="card platform"><div class="platform-icon platform-logo-wrap epic-logo-wrap"><img class="platform-logo" src="./epic-games-logo.png" alt="Epic Games logo"></div><h2>Epic Games</h2><p>Open your official Epic Games account.</p><a class="btn gold" href="https://store.epicgames.com/" target="_blank">LOGIN ↗</a></section>
+<section class="card platform"><div class="platform-icon epicicon">EPIC<br>GAMES</div><h2>Epic Games</h2><p>Open your official Epic Games account.</p><a class="btn gold" href="https://store.epicgames.com/" target="_blank">LOGIN ↗</a></section>
 <section class="card platform"><div class="platform-icon spinicon">⚓</div><h2>Friday Spinner</h2><p>Use your weekly Sirski Transport Friday spin.</p><a class="btn gold" href="./spinner/index.html">OPEN SPINNER →</a></section>
 <div class="security-note">🔒 TrucksBook and VTLog passwords are entered only on their official websites. Sirski Transport does not collect those passwords.</div>
 </div><div id="status" class="status"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");
+let gallerySession=null;
 async function recoveryCall(body){const {data,error}=await sb.functions.invoke("member-recovery",{body});if(error){let msg=error.message||"Request failed.";try{if(error.context?.clone){const r=await error.context.clone().json();if(r?.error)msg=r.error}}catch(_){}throw new Error(msg)}if(data?.error)throw new Error(data.error);return data}
-async function load(){const {data:{session}}=await sb.auth.getSession();if(!session){location.href="./member-login.html";return}document.getElementById("who").textContent=session.user.email;const {data,error}=await sb.rpc("get_my_driver_points");if(error){document.getElementById("status").textContent=error.message;return}const row=Array.isArray(data)?data[0]:data;if(!row){document.getElementById("driver").textContent="Your Sirski driver account is not linked yet. Please contact the Sirski admin.";document.getElementById("points").textContent="0"}else{document.getElementById("points").textContent=row.points_balance??0;document.getElementById("driver").textContent=(row.display_name||row.trucksbook_username||"Sirski Driver")}await loadRecovery()}
+async function load(){const {data:{session}}=await sb.auth.getSession();if(!session){location.href="./member-login.html";return}document.getElementById("who").textContent=session.user.email;
+gallerySession=session;const {data,error}=await sb.rpc("get_my_driver_points");if(error){document.getElementById("status").textContent=error.message;return}const row=Array.isArray(data)?data[0]:data;if(!row){document.getElementById("driver").textContent="Your Sirski driver account is not linked yet. Please contact the Sirski admin.";document.getElementById("points").textContent="0"}else{document.getElementById("points").textContent=row.points_balance??0;document.getElementById("driver").textContent=(row.display_name||row.trucksbook_username||"Sirski Driver")}await loadRecovery();await loadGallery()}
 async function loadRecovery(){const box=document.getElementById("recoveryStatus");try{const r=await recoveryCall({action:"get_recovery_status"});if(r.verified){box.innerHTML='<span class="verified">✓ Verified recovery email: '+r.masked_email+'</span>'}else if(r.recovery_email){box.innerHTML='<span class="pending">Verification needed for '+r.masked_email+'</span>'}else{box.textContent="No recovery email is set yet."}}catch(e){box.textContent="Recovery status unavailable."}}
 document.getElementById("changePassword").onclick=async()=>{const np=document.getElementById("newpass").value,cp=document.getElementById("confirmpass").value,m=document.getElementById("pwmsg");m.className="status";if(np.length<6){m.textContent="Password must be at least 6 characters.";m.classList.add("error");return}if(np!==cp){m.textContent="Passwords do not match.";m.classList.add("error");return}m.textContent="Changing password...";const {error}=await sb.auth.updateUser({password:np});if(error){m.textContent=error.message;m.classList.add("error");return}document.getElementById("newpass").value=document.getElementById("confirmpass").value="";m.textContent="Password changed successfully.";m.classList.add("success")};
 document.getElementById("sendCode").onclick=async()=>{const email=document.getElementById("recoveryEmail").value.trim(),pw=document.getElementById("currentPassword").value,m=document.getElementById("recoveryMsg");m.className="status";if(!email){m.textContent="Enter your personal recovery email.";return}if(!pw){m.textContent="Enter your current Sirski password.";return}m.textContent="Sending verification code...";try{const r=await recoveryCall({action:"set_recovery_email",recovery_email:email,current_password:pw});m.textContent=r.message||"Verification code sent.";await loadRecovery()}catch(e){m.textContent=e.message;m.classList.add("error")}};
 document.getElementById("verifyCode").onclick=async()=>{const code=document.getElementById("code").value.trim(),m=document.getElementById("recoveryMsg");m.className="status";if(!/^\d{6}$/.test(code)){m.textContent="Enter the 6-digit verification code.";m.classList.add("error");return}m.textContent="Verifying...";try{const r=await recoveryCall({action:"verify_recovery_email",code});m.textContent=r.message||"Recovery email verified.";m.classList.add("success");await loadRecovery()}catch(e){m.textContent=e.message;m.classList.add("error")}};
+
+function setGalleryStatus(msg,cls=""){
+  const e=document.getElementById("galleryStatus");
+  e.textContent=msg;
+  e.className="status "+cls;
+}
+async function compressGalleryImage(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const max=1800;
+      const scale=Math.min(1,max/Math.max(img.width,img.height));
+      const c=document.createElement("canvas");
+      c.width=Math.round(img.width*scale);
+      c.height=Math.round(img.height*scale);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b=>b?resolve(b):reject(new Error("Image compression failed.")),"image/webp",0.82);
+    };
+    img.onerror=()=>{
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image."));
+    };
+    img.src=url;
+  });
+}
+async function loadGallery(){
+  if(!gallerySession)return;
+  const {data,error}=await sb.from("member_gallery").select("*").order("created_at",{ascending:false});
+  const empty=document.getElementById("galleryEmpty");
+  const grid=document.getElementById("galleryGrid");
+  if(error){
+    empty.textContent=error.message;
+    return;
+  }
+  grid.innerHTML="";
+  if(!data?.length){
+    empty.textContent="No screenshots yet. Upload the first one!";
+    return;
+  }
+  empty.textContent="";
+  for(const row of data){
+    const url=sb.storage.from("sirski-gallery").getPublicUrl(row.image_path).data.publicUrl;
+    const card=document.createElement("div");
+    card.className="gallery-item";
+    card.innerHTML='<img loading="lazy" alt="Sirski Transport screenshot"><div class="gallery-item-body"><div class="gallery-caption"></div><div class="gallery-date"></div><button class="logout" type="button">DELETE MY SCREENSHOT</button></div>';
+    card.querySelector("img").src=url;
+    card.querySelector(".gallery-caption").textContent=row.caption||"Sirski Transport screenshot";
+    card.querySelector(".gallery-date").textContent=(row.member_name?row.member_name+" • ":"")+new Date(row.created_at).toLocaleString();
+    const del=card.querySelector("button");
+    if(row.user_id!==gallerySession.user.id)del.style.display="none";
+    del.onclick=()=>deleteGalleryItem(row);
+    grid.appendChild(card);
+  }
+}
+async function deleteGalleryItem(row){
+  if(!confirm("Delete your screenshot?"))return;
+  setGalleryStatus("Deleting...");
+  const s=await sb.storage.from("sirski-gallery").remove([row.image_path]);
+  if(s.error){setGalleryStatus(s.error.message,"error");return}
+  const d=await sb.from("member_gallery").delete().eq("id",row.id).eq("user_id",gallerySession.user.id);
+  if(d.error){setGalleryStatus(d.error.message,"error");return}
+  setGalleryStatus("Screenshot deleted.","success");
+  await loadGallery();
+}
+document.getElementById("galleryUpload").onclick=async()=>{
+  const file=document.getElementById("galleryFile").files[0];
+  if(!file){setGalleryStatus("Choose an image first.","error");return}
+  if(file.size>5*1024*1024){setGalleryStatus("The original image is larger than 5 MB.","error");return}
+  setGalleryStatus("Preparing screenshot...");
+  try{
+    const blob=await compressGalleryImage(file);
+    const path=gallerySession.user.id+"/"+crypto.randomUUID()+".webp";
+    setGalleryStatus("Uploading...");
+    const up=await sb.storage.from("sirski-gallery").upload(path,blob,{contentType:"image/webp",upsert:false});
+    if(up.error)throw up.error;
+    const ins=await sb.from("member_gallery").insert({
+      user_id:gallerySession.user.id,
+      image_path:path,
+      caption:document.getElementById("galleryCaption").value.trim()||null
+    });
+    if(ins.error){
+      await sb.storage.from("sirski-gallery").remove([path]);
+      throw ins.error;
+    }
+    document.getElementById("galleryFile").value="";
+    document.getElementById("galleryCaption").value="";
+    setGalleryStatus("Screenshot uploaded successfully.","success");
+    await loadGallery();
+  }catch(e){
+    setGalleryStatus(e.message||"Upload failed.","error");
+  }
+};
+
 document.getElementById("logout").onclick=async()=>{await sb.auth.signOut();location.href="./member-login.html"};load();
 </script></body></html>
