@@ -35,6 +35,10 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
   </section>
 
   <main id="panel" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px">
+      <a class="back" href="./spinner/index.html" style="margin-top:0">← Back to Spinner</a>
+      <div class="small">Admin session remains active when returning to the Spinner.</div>
+    </div>
     <section class="card">
       <h2>Create Sirski Member Login</h2>
       <p class="small">Select an existing driver. The system prepares a personalized <b>@sirski-transport.com</b> login address. The driver's existing Spinner points remain unchanged.</p>
@@ -131,8 +135,15 @@ async function loadDrivers(){
   $("resetDriver").innerHTML=linked.length
     ? linked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
     : '<option value="">No linked member accounts</option>';
-  $("driversTable").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th></tr>'+
-    drivers.map(d=>`<tr><td>${esc(d.trucksbook_username)}</td><td>${esc(d.display_name||"")}</td><td><b>${Number(d.points_balance||0)}</b>/20</td><td><span class="pill ${d.active?'':'off'}">${d.active?'Active':'Disabled'}</span></td><td>${d.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill neutral">Not linked</span>'}</td></tr>`).join("")+
+  $("driversTable").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th><th>Recovery Email</th><th>Recovery Status</th></tr>'+
+    drivers.map(d=>{
+      const recovery=d.recovery_email||"—";
+      const verified=d.recovery_email_verified_at;
+      const recoveryStatus=verified
+        ? '<span class="pill">✓ Verified</span>'
+        : (d.recovery_email ? '<span class="pill off">Not verified</span>' : '<span class="pill neutral">Not set</span>');
+      return `<tr><td>${esc(d.trucksbook_username)}</td><td>${esc(d.display_name||"")}</td><td><b>${Number(d.points_balance||0)}</b>/20</td><td><span class="pill ${d.active?'':'off'}">${d.active?'Active':'Disabled'}</span></td><td>${d.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill neutral">Not linked</span>'}</td><td>${esc(recovery)}</td><td>${recoveryStatus}</td></tr>`;
+    }).join("")+
     '</table>';
 }
 $("driver").onchange=updateGeneratedEmail;
