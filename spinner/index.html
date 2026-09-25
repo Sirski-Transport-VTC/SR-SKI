@@ -15,7 +15,7 @@
 </style>
 
 </head><body><div class="wrap">
-<header id="top" class="top"><div class="brand"><img class="brand-logo" src="../sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../index.html">← BACK TO MAIN WEBSITE</a></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a id="adminDashboardBtn" class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></div></header>
+<header id="top" class="top"><div class="brand"><img class="brand-logo" src="../sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../index.html">← BACK TO MAIN WEBSITE</a></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a id="adminDashboardBtn" class="back-main" href="#admin" style="margin-top:0;display:none">ADMIN DASHBOARD</a><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></div></header>
 <section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
 <div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
 <section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
@@ -188,10 +188,19 @@ $("generateResetPassword").onclick=()=>{$('resetPassword').value=randomPassword(
 $("resetMember").onclick=async()=>{const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;if(!driver_id||!new_password){adminStatus('resetStatus','Select a linked member and enter a temporary password.',true);return}if(new_password.length<6){adminStatus('resetStatus','Temporary password must be at least 6 characters.',true);return}try{$('resetMember').disabled=true;adminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});adminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`);$('resetPassword').value=''}catch(e){adminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
 $("unlinkMember").onclick=async()=>{const driver_id=$('unlinkDriver').value;if(!driver_id){adminStatus('unlinkStatus','Select a linked member first.',true);return}const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the Sirski member login for ${d?.trucksbook_username||'this driver'}? The driver, points, and Spinner history will remain.`))return;try{$('unlinkMember').disabled=true;adminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});adminStatus('unlinkStatus','Member login unlinked. The driver and Spinner data were kept.');await loadAdmin()}catch(e){adminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
 $("refreshAdmin").onclick=()=>loadAdmin();
-if(configured) getSB().then(client=>client.auth.getSession()).then(({data})=>{
-  if(data.session){
+if(configured) getSB().then(client=>client.auth.getSession()).then(async({data})=>{
+  if(!data.session) return;
+  // A normal Sirski member may have a valid Supabase session, but must not see
+  // the Admin Dashboard. Only a session that passes the admin Edge Function
+  // authorization check is allowed to reveal the admin controls.
+  try{
+    await adminCall('stats');
+    $('adminDashboardBtn').style.display='inline-flex';
     $('admin').style.display='block';
-    loadAdmin();
+    await loadAdmin();
+  }catch(_){
+    $('adminDashboardBtn').style.display='none';
+    $('admin').style.display='none';
   }
 }).catch(()=>{});
 </script></body></html>
