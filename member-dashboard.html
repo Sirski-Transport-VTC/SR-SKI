@@ -89,7 +89,7 @@ async function compressGalleryImage(file){
 }
 async function loadGallery(){
   if(!gallerySession)return;
-  const {data,error}=await sb.from("member_gallery").select("*").order("created_at",{ascending:false});
+  const {data,error}=await sb.rpc("get_member_gallery");
   const empty=document.getElementById("galleryEmpty");
   const grid=document.getElementById("galleryGrid");
   if(error){
@@ -109,7 +109,7 @@ async function loadGallery(){
     card.innerHTML='<img loading="lazy" alt="Sirski Transport screenshot"><div class="gallery-item-body"><div class="gallery-caption"></div><div class="gallery-date"></div><button class="logout" type="button">DELETE MY SCREENSHOT</button></div>';
     card.querySelector("img").src=url;
     card.querySelector(".gallery-caption").textContent=row.caption||"Sirski Transport screenshot";
-    card.querySelector(".gallery-date").textContent=(row.member_name?row.member_name+" • ":"")+new Date(row.created_at).toLocaleString();
+    card.querySelector(".gallery-date").textContent=(row.member_name||"Sirski Member")+" • Uploaded: "+new Date(row.created_at).toLocaleString();
     const del=card.querySelector("button");
     if(row.user_id!==gallerySession.user.id)del.style.display="none";
     del.onclick=()=>deleteGalleryItem(row);
@@ -140,7 +140,6 @@ document.getElementById("galleryUpload").onclick=async()=>{
     const ins=await sb.from("member_gallery").insert({
       user_id:gallerySession.user.id,
       image_path:path,
-      created_at:new Date().toISOString(),
       caption:document.getElementById("galleryCaption").value.trim()||null
     });
     if(ins.error){
