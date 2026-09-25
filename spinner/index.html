@@ -140,7 +140,10 @@ $('spinBtn').onclick=async()=>{
     const prize=Number(result.prize||0);
     const totalPoints=Number(result.total_points||0);
     const redeemable=Boolean(result.redeemable);
-    const driverName=data.driver||data.display_name||username;
+    const driverName =
+  typeof data.driver === 'object' && data.driver !== null
+    ? (data.driver.display_name || data.driver.username || username)
+    : (data.driver || data.display_name || username);
     spinAnimation(target,()=>{
       $('prize').textContent=slot.type==='quote'?'🚛':prize;
       $('resultText').textContent=slot.type==='quote'?slot.text:captionForSlot(slot);
