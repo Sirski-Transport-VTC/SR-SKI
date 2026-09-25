@@ -90,7 +90,7 @@ async function compressGalleryImage(file){
 }
 async function loadGallery(){
   if(!gallerySession)return;
-  const {data,error}=await sb.from("member_gallery").select("*").order("created_at",{ascending:false});
+  const {data,error}=await sb.rpc("get_member_gallery");
   const empty=document.getElementById("galleryEmpty");
   const grid=document.getElementById("galleryGrid");
   if(error){
