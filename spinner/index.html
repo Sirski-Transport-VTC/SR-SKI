@@ -18,7 +18,7 @@
 <header id="top" class="top"><div class="brand"><img class="brand-logo" src="../sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI TRANSPORT</h1><p>Driven by Passion. Built on Trust.</p><a class="back-main" href="../index.html">← BACK TO MAIN WEBSITE</a></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><a id="adminDashboardBtn" class="back-main" href="#admin" style="margin-top:0;display:none">ADMIN DASHBOARD</a><div class="badge">FRIDAY SPINNER • 1 SPIN / WEEK</div></div></header>
 <section class="hero"><h2>Friday <span>Lucky Spin</span></h2><p>Registered Sirski Transport TrucksBook participants get one real spin every Friday. Demo spins are limited to 5.</p></section>
 <div class="grid"><section class="card"><div class="wheelBox"><div class="pointer"></div><div id="wheel" class="wheel"><div id="labels" class="labels"></div><div class="hub">SIRSKI<br>SPIN</div></div></div></section>
-<section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="TrucksBook username (optional for demo)"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Demo spins are for fun only. You get 5 demo spins per page load. On the 6th attempt, enter a registered TrucksBook username. Real points accumulate across Fridays. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
+<section class="card form"><h3>Verify Driver</h3><div class="small">Enter your TrucksBook username. Registered Sirski Transport drivers get one real spin every Friday. Demo spins are free and reset to 5 when this page is reloaded.</div><input id="username" class="input" placeholder="Your name for demo / TrucksBook username for member spin"><button id="spinBtn" class="btn">TRY DEMO SPIN</button><button id="clearBtn" class="btn secondary">Clear</button><a class="btn secondary" href="../member-login.html" style="display:block;text-align:center;text-decoration:none">SIRSKI MEMBER LOGIN</a><div id="status" class="status"></div><div id="result" class="result"><div class="small">THIS FRIDAY'S RESULT</div><div id="prize" class="num">🚛</div><div id="resultText"></div><div id="pointsLine" class="small" style="margin-top:10px"></div></div><div class="notice">Public demo spins are for fun only. You get 5 demo spins per page load. A name is optional; if you enter one, Sirski records the demo use with the date/time. A name alone never unlocks the real Friday spin. Real points are available only to logged-in Sirski members. Reach <b>20 points</b> and your reward becomes redeemable.</div></section></div>
 <section id="admin" class="admin card">
 <div class="adminbar"><div><h3 style="margin:0">Sirski Transport Admin Dashboard</h3><div class="small">Manage drivers, member logins, passwords, and Friday Spinner accounts from one page.</div></div><div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a id="backToSpinnerBtn" class="back-main" href="#top" style="margin-top:0">← BACK TO SPINNER</a><a class="back-main" href="https://sirski-transport.com/admin.html" style="margin-top:0">MEMBER ADMIN</a><a id="adminDashboardBtn2" class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px;margin-top:0">LOG OUT</button></div></div>
 <div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email" autocomplete="username"><input id="adminPassword" class="input" type="password" placeholder="Admin password" autocomplete="current-password"><button id="adminLoginBtn" class="btn">ADMIN SIGN IN</button><div id="adminStatus" class="status"></div></div>
@@ -65,7 +65,54 @@ function captionFor(v){const a=captions[v]||[];return a[Math.floor(Math.random()
 let demoSpins=0;
 function demoCount(){return demoSpins}
 function setDemoCount(n){demoSpins=n}
-function updateButton(){ const u=$('username').value.trim(); const n=demoCount(); $('spinBtn').textContent=u?'SPIN MY FRIDAY CHANCE':(n<5?`TRY DEMO SPIN (${n}/5)`:'ENTER USERNAME TO SPIN'); $('spinBtn').disabled=!u&&n>=5; }
+
+let demoSessionId=localStorage.getItem('sirski_spinner_demo_session');
+if(!demoSessionId){
+  demoSessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));
+  localStorage.setItem('sirski_spinner_demo_session',demoSessionId);
+}
+
+async function getMemberSession(){
+  try{
+    const client=await getSB();
+    const {data}=await client.auth.getSession();
+    return data?.session||null;
+  }catch(_){
+    return null;
+  }
+}
+
+async function recordNamedDemo(name,spinNumber){
+  const clean=String(name||'').trim();
+  if(!clean) return;
+  try{
+    const client=await getSB();
+    const {error}=await client.from('spinner_demo_usage').insert({
+      visitor_name:clean,
+      session_id:demoSessionId,
+      spin_number:spinNumber
+    });
+    if(error) throw error;
+  }catch(e){
+    console.warn('Demo name could not be recorded:',e);
+  }
+}
+
+async function updateButton(){
+  const u=$('username').value.trim();
+  const n=demoCount();
+  const session=await getMemberSession();
+
+  if(session){
+    $('spinBtn').textContent='SPIN MY FRIDAY CHANCE';
+    $('spinBtn').disabled=false;
+    return;
+  }
+
+  $('spinBtn').textContent=n<5?`TRY DEMO SPIN (${n}/5)`:'LOGIN TO SPIN FRIDAY';
+  $('spinBtn').disabled=false;
+}
+
 let currentRotation=0;
 let animationFrame=null;
 function easeOutCubic(t){return 1-Math.pow(1-t,3)}
@@ -105,17 +152,62 @@ function spinAnimation(target,onDone){
 }
 
 function demoSpin(){
-  const n=demoCount(); if(n>=5){setStatus('You have used all 5 demo spins. Enter your registered TrucksBook username for the real Friday spin.',true);return;}
-  $('spinBtn').disabled=true;$('result').style.display='none';setStatus(`Demo spin ${n+1} of 5 — no prize is recorded.`);
-  const target=Math.floor(Math.random()*slots.length), slot=slots[target]; spinAnimation(target,()=>{ const display=slot.type==='quote'?'🚛':values[target]; $('prize').textContent=display; $('resultText').textContent=slot.type==='quote'?`DEMO: ${slot.text}`:`DEMO: ${captionForSlot(slot)}`; $('pointsLine').textContent='Demo spin — no points awarded.'; $('result').style.display='block'; setDemoCount(n+1); setStatus(n+1===5?'Demo limit reached. Enter a registered TrucksBook username for your real spin.':'Demo complete.'); $('spinBtn').disabled=false; updateButton(); });
+  const n=demoCount();
+  if(n>=5){
+    setStatus('You have used all 5 demo spins. Log in with your Sirski Member account for the real Friday spin.',true);
+    return;
+  }
+
+  const visitorName=$('username').value.trim();
+  const spinNumber=n+1;
+
+  $('spinBtn').disabled=true;
+  $('result').style.display='none';
+  setStatus(`Demo spin ${spinNumber} of 5 — no prize is recorded.`);
+
+  // Record only named public demo users. Blank names are intentionally not stored.
+  recordNamedDemo(visitorName,spinNumber);
+
+  const target=Math.floor(Math.random()*slots.length), slot=slots[target];
+  spinAnimation(target,()=>{
+    const display=slot.type==='quote'?'🚛':values[target];
+    $('prize').textContent=display;
+    $('resultText').textContent=slot.type==='quote'?`DEMO: ${slot.text}`:`DEMO: ${captionForSlot(slot)}`;
+    $('pointsLine').textContent='Demo spin — no points awarded.';
+    $('result').style.display='block';
+    setDemoCount(spinNumber);
+    setStatus(spinNumber===5?'Demo limit reached. Log in with your Sirski Member account for your real Friday spin.':'Demo complete.');
+    updateButton();
+  });
 }
-$('username').addEventListener('input',updateButton); updateButton();
+
+$('username').addEventListener('input',()=>updateButton());
+updateButton();
+
 $('spinBtn').onclick=async()=>{
   const username=$('username').value.trim();
-  if(!username){demoSpin();return}
-  $('spinBtn').disabled=true;$('result').style.display='none';setStatus('Checking your TrucksBook registration…');
+  const session=await getMemberSession();
+
+  // Public visitor: name is optional and only gives demo access.
+  if(!session){
+    if(demoCount()>=5){
+      setStatus('Your 5 public demo spins are finished. Please use Sirski Member Login for the real Friday spin.',true);
+      return;
+    }
+    demoSpin();
+    return;
+  }
+
+  // Logged-in Sirski member: the Edge Function will verify the linked
+  // driver from the authenticated Supabase user, not from the typed name.
+  $('spinBtn').disabled=true;
+  $('result').style.display='none';
+  setStatus('Checking your Sirski member account…');
+
   try{
-    const client=await getSB(); const {data,error}=await client.functions.invoke('spin',{body:{username}});
+    const client=await getSB();
+    const {data,error}=await client.functions.invoke('spin',{body:{username}});
+
     if(error){
       let message=error.message||'Unable to contact the spinner server.';
       try{
@@ -129,32 +221,42 @@ $('spinBtn').onclick=async()=>{
       }catch(_){}
       throw new Error(message);
     }
+
     if(data?.error) throw new Error(data.error);
     const result=data.result||data;
     const rawSlot=Number(result.slot_index);
-    // The current deployed function returns database slot 1-20 inside data.result.
-    // The final function returns browser slot 0-19 at the top level.
     const target=(data.result&&Number.isInteger(rawSlot))?rawSlot-1:rawSlot;
-    if(!Number.isInteger(target)||target<0||target>=slots.length) throw new Error('The server returned an invalid wheel result.');
+
+    if(!Number.isInteger(target)||target<0||target>=slots.length){
+      throw new Error('The server returned an invalid wheel result.');
+    }
+
     const slot=slots[target];
     const prize=Number(result.prize||0);
     const totalPoints=Number(result.total_points||0);
     const redeemable=Boolean(result.redeemable);
     const driverName =
-  typeof data.driver === 'object' && data.driver !== null
-    ? (data.driver.display_name || data.driver.username || username)
-    : (data.driver || data.display_name || username);
+      typeof data.driver === 'object' && data.driver !== null
+        ? (data.driver.display_name || data.driver.username || username)
+        : (data.driver || data.display_name || username);
+
     spinAnimation(target,()=>{
       $('prize').textContent=slot.type==='quote'?'🚛':prize;
       $('resultText').textContent=slot.type==='quote'?slot.text:captionForSlot(slot);
       $('pointsLine').innerHTML=`Your points: <b>${totalPoints}</b> / 20${redeemable?' — <span style="color:#ffd83d">REDEEMABLE!</span>':''}`;
       $('result').style.display='block';
       setStatus(redeemable?`Great run, ${driverName}! You reached 20+ points. Your reward is redeemable. Next real spin: Friday.`:`Spin recorded for ${driverName}. Your points carry over to next Friday.`);
-      $('spinBtn').disabled=false; updateButton();
+      $('spinBtn').disabled=false;
+      updateButton();
     });
-  }catch(e){setStatus(e.message||'Unable to spin.',true);$('spinBtn').disabled=false;updateButton()}
+  }catch(e){
+    setStatus(e.message||'Unable to spin.',true);
+    $('spinBtn').disabled=false;
+    updateButton();
+  }
 };
-$('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');$('spinBtn').disabled=false };
+
+$('clearBtn').onclick=()=>{ $('username').value='';$('result').style.display='none';setStatus('');updateButton() };
 const adminSection=false;
 $('adminDashboardBtn')?.addEventListener('click',e=>{
   e.preventDefault();
