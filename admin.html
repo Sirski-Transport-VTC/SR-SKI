@@ -47,10 +47,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 
   <main id="panel" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <a class="back" href="./spinner/index.html" style="margin-top:0">← Back to Spinner</a>
-        <a class="btn secondary" href="https://sirski-transport-vtc.github.io/Sirski-Transport-Gallery/admin.html" target="_blank" rel="noopener">📸 GALLERY ADMIN</a>
-      </div>
+      <a class="back" href="./spinner/index.html" style="margin-top:0">← Back to Spinner</a>
       <div class="small">Admin session remains active when returning to the Spinner.</div>
     </div>
     <section class="card">
@@ -106,6 +103,18 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <h2>Driver Accounts</h2>
       <div class="small">A member can sign in only after their Sirski account is linked to their driver record.</div>
       <div id="driversTable"></div>
+    </section>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin-bottom:4px">👥 Public Demo Visitors</h2>
+          <p class="small">Names entered by public visitors while using the Friday Spinner demo. Blank-name demo spins are not recorded.</p>
+        </div>
+        <button id="demoVisitorsRefresh" class="btn secondary" style="width:auto">REFRESH</button>
+      </div>
+      <div id="demoVisitorsStatus" class="status">Loading demo visitors...</div>
+      <div id="demoVisitorsTable"></div>
     </section>
 
     <section class="card">
@@ -199,7 +208,7 @@ $("copyEmail").onclick=async()=>{
 };
 $("loginBtn").onclick=async()=>{
   $("loginStatus").textContent="Signing in...";
-  try{const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});if(error)throw error;$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();$("loginStatus").textContent="";}catch(e){$("loginStatus").textContent=e.message;$("loginStatus").className="status error";}
+  try{const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});if(error)throw error;$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors();$("loginStatus").textContent="";}catch(e){$("loginStatus").textContent=e.message;$("loginStatus").className="status error";}
 };
 $("create").onclick=async()=>{
   const driver_id=$("driver").value,email=$("email").value.trim(),password=$("password").value,display_name=$("display").value.trim();
@@ -266,7 +275,7 @@ $("resetMember").onclick=async()=>{
 };
 $("refresh").onclick=()=>loadDrivers().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await adminCall("stats");$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers()}catch(e){}}})();
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await adminCall("stats");$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors()}catch(e){}}})();
 
 async function loadAdminGallery(){
   const status=$("adminGalleryStatus");
@@ -354,6 +363,34 @@ async function loadAdminGallery(){
     empty.textContent="";
   }
 }
+
+async function loadDemoVisitors(){
+  const status=$("demoVisitorsStatus");
+  const table=$("demoVisitorsTable");
+  status.className="status";
+  status.textContent="Loading demo visitors...";
+  table.innerHTML="";
+  try{
+    const r=await adminCall("list_demo_visitors");
+    const visitors=r.visitors||[];
+    if(!visitors.length){
+      status.textContent="No named public demo visitors yet.";
+      return;
+    }
+    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th></tr>'+
+      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td></tr>`).join("")+
+      '</table></div>';
+    status.textContent=`${visitors.length} named demo use${visitors.length===1?'':'s'} recorded.`;
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to load public demo visitors.";
+  }
+}
+
+$("demoVisitorsRefresh").onclick=()=>loadDemoVisitors().catch(e=>{
+  $("demoVisitorsStatus").textContent=e.message;
+  $("demoVisitorsStatus").className="status error";
+});
 
 $("galleryRefresh").onclick=()=>loadAdminGallery();
 
