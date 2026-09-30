@@ -25,6 +25,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 .admin-gallery-meta{font-size:11px;color:#8d98a8;margin-top:6px;line-height:1.4}
 @media(max-width:850px){.admin-gallery-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.admin-gallery-grid{grid-template-columns:1fr}}
+.sponsor-admin-grid{display:grid;gap:12px;margin-top:18px}.sponsor-admin-row{display:grid;grid-template-columns:70px 1.2fr 1fr auto;gap:10px;align-items:end;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0f14}.sponsor-admin-slot{font-size:12px;font-weight:900;color:var(--accent);letter-spacing:.08em}.sponsor-admin-row .label{margin-top:0}.sponsor-save{white-space:nowrap}@media(max-width:750px){.sponsor-admin-row{grid-template-columns:1fr}.sponsor-admin-slot{padding-bottom:2px}}
 </style>
 
 </head>
@@ -118,6 +119,18 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
     </section>
 
     <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h2 style="margin-bottom:4px">🎁 Sponsor Slots</h2>
+          <p class="small">Edit the gift/prize description and sponsor name for each of the 10 permanent sponsor slots. Changes affect the public Sponsors page only.</p>
+        </div>
+        <button id="sponsorRefresh" class="btn secondary">REFRESH SPONSORS</button>
+      </div>
+      <div id="sponsorStatus" class="status">Loading sponsor slots...</div>
+      <div id="sponsorAdminGrid" class="sponsor-admin-grid"></div>
+    </section>
+
+    <section class="card">
       <h2>📸 Member Gallery</h2>
       <p class="small">View screenshots uploaded by Sirski members. Admin can delete any screenshot.</p>
       <div class="actions">
@@ -208,7 +221,7 @@ $("copyEmail").onclick=async()=>{
 };
 $("loginBtn").onclick=async()=>{
   $("loginStatus").textContent="Signing in...";
-  try{const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});if(error)throw error;$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors();$("loginStatus").textContent="";}catch(e){$("loginStatus").textContent=e.message;$("loginStatus").className="status error";}
+  try{const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});if(error)throw error;$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors();await loadSponsorSlots();$("loginStatus").textContent="";}catch(e){$("loginStatus").textContent=e.message;$("loginStatus").className="status error";}
 };
 $("create").onclick=async()=>{
   const driver_id=$("driver").value,email=$("email").value.trim(),password=$("password").value,display_name=$("display").value.trim();
@@ -275,7 +288,58 @@ $("resetMember").onclick=async()=>{
 };
 $("refresh").onclick=()=>loadDrivers().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await adminCall("stats");$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors()}catch(e){}}})();
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await adminCall("stats");$("loginCard").style.display="none";$("panel").style.display="block";await loadDrivers();await loadAdminGallery();await loadDemoVisitors();await loadSponsorSlots()}catch(e){}}})();
+
+async function loadSponsorSlots(){
+  const status=$("sponsorStatus");
+  const grid=$("sponsorAdminGrid");
+  status.className="status";
+  status.textContent="Loading sponsor slots...";
+  grid.innerHTML="";
+  try{
+    const {data,error}=await sb.from("sponsor_slots").select("slot_number,prize_text,sponsor_name,updated_at").order("slot_number",{ascending:true});
+    if(error) throw error;
+    const rows=[];
+    for(let n=1;n<=10;n++){
+      rows.push(data?.find(r=>Number(r.slot_number)===n)||{slot_number:n,prize_text:"",sponsor_name:""});
+    }
+    rows.forEach(row=>{
+      const wrap=document.createElement("div");
+      wrap.className="sponsor-admin-row";
+      wrap.innerHTML=`<div class="sponsor-admin-slot">SLOT ${String(row.slot_number).padStart(2,"0")}</div>
+        <label class="label">Gift / Prize Description<input class="input sponsor-prize" type="text" maxlength="120" value="${esc(row.prize_text||"")}" placeholder="e.g. 20 OMR Gift Voucher"></label>
+        <label class="label">Sponsor Name<input class="input sponsor-name" type="text" maxlength="80" value="${esc(row.sponsor_name||"")}" placeholder="Sponsor name"></label>
+        <button class="btn sponsor-save" type="button">SAVE</button>`;
+      const save=wrap.querySelector(".sponsor-save");
+      save.onclick=async()=>{
+        save.disabled=true;
+        save.textContent="SAVING...";
+        status.className="status";
+        status.textContent="";
+        try{
+          const prize=wrap.querySelector(".sponsor-prize").value.trim();
+          const sponsor=wrap.querySelector(".sponsor-name").value.trim();
+          const {error}=await sb.from("sponsor_slots").update({prize_text:prize,sponsor_name:sponsor,updated_at:new Date().toISOString()}).eq("slot_number",row.slot_number);
+          if(error) throw error;
+          status.textContent=`Slot ${String(row.slot_number).padStart(2,"0")} saved successfully.`;
+        }catch(e){
+          status.className="status error";
+          status.textContent=e.message||"Unable to save sponsor slot.";
+        }finally{
+          save.disabled=false;
+          save.textContent="SAVE";
+        }
+      };
+      grid.appendChild(wrap);
+    });
+    if(!data?.length){status.textContent="Sponsor slots are ready. Save any slot to add its details.";}else{status.textContent="Sponsor slots loaded.";}
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to load sponsor slots.";
+  }
+}
+
+$("sponsorRefresh").onclick=()=>loadSponsorSlots();
 
 async function loadAdminGallery(){
   const status=$("adminGalleryStatus");
