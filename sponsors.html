@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sirski Transport VTC — Sponsors and gift slots.">
+<title>Sirski Transport | Our Sponsors</title>
+<style>
+:root{--bg:#08090b;--panel:#111419;--text:#f4f5f7;--muted:#9da2aa;--accent:#d9a326;--line:#292c32}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;line-height:1.6}.nav{position:sticky;z-index:20;top:0;height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;background:rgba(8,9,11,.94);backdrop-filter:blur(15px);border-bottom:1px solid rgba(255,255,255,.07)}.brand{display:flex;align-items:center;gap:10px;color:white;text-decoration:none;font-size:13px;font-weight:800;letter-spacing:1.4px}.brand img{width:46px;height:46px;object-fit:contain}.brand b{font-weight:400;color:#aeb2b8}.back{border:1px solid var(--line);padding:10px 15px;color:#d8dbe0;text-decoration:none;font-size:10px;font-weight:800;letter-spacing:1px}.back:hover{border-color:var(--accent);color:var(--accent)}.hero{padding:90px 7vw 65px;text-align:center;background:radial-gradient(circle at 50% 20%,#202a3a 0,#0a0d13 45%,#050609 100%)}.eyebrow,.section-label{color:var(--accent);font-size:10px;font-weight:900;letter-spacing:2.5px}.hero h1{font-size:clamp(54px,8vw,100px);line-height:.9;margin:18px 0 18px;font-weight:900;letter-spacing:-4px}.hero h1 span{color:var(--accent)}.hero p{max-width:650px;margin:0 auto;color:#c5c9cf;font-size:15px}.sponsors{padding:65px 7vw 90px}.grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.slot{position:relative;min-height:220px;padding:28px;background:linear-gradient(145deg,#151a22,#0b0e13);border:1px solid var(--line);border-radius:18px;overflow:hidden}.slot:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}.slot-number{font-size:10px;font-weight:900;letter-spacing:2px;color:var(--accent)}.gift-label{margin-top:22px;color:#7f8792;font-size:9px;font-weight:900;letter-spacing:1.5px}.gift{font-size:25px;font-weight:800;line-height:1.2;margin-top:5px;min-height:60px}.sponsor-label{margin-top:20px;color:#7f8792;font-size:9px;font-weight:900;letter-spacing:1.5px}.sponsor-name{font-size:15px;font-weight:700;margin-top:3px;color:#e9edf3}.empty{color:#8f97a3;font-style:italic;font-weight:500}.note{max-width:1200px;margin:28px auto 0;color:#6f7782;font-size:11px;text-align:center}.footer{padding:35px 7vw;border-top:1px solid var(--line);text-align:center;color:#6f7782;font-size:11px}.footer a{color:#9da2aa;text-decoration:none}.footer a:hover{color:var(--accent)}@media(max-width:700px){.nav{padding:0 18px}.brand{font-size:12px}.grid{grid-template-columns:1fr}.hero{padding:65px 7vw 50px}.hero h1{letter-spacing:-2px}.sponsors{padding:45px 5vw 70px}.slot{padding:23px}.gift{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="nav">
+<a class="brand" href="./index.html"><img src="./sirski-logo.png" alt="Sirski Transport" onerror="this.style.display='none'"><span>SIRSKI TRANSPORT <b>VTC</b></span></a>
+<a class="back" href="./index.html">← MAIN WEBSITE</a>
+</header>
+<main>
+<section class="hero"><div class="eyebrow">SIRSKI TRANSPORT VTC</div><h1>OUR <span>SPONSORS</span></h1><p>We are grateful to the sponsors and supporters who help make Sirski Transport community activities, gifts and events possible.</p></section>
+<section class="sponsors"><div id="sponsorGrid" class="grid"></div><div id="status" class="note">Loading sponsor slots...</div><p class="note">Sponsor information is maintained by the Sirski Transport administration team.</p></section>
+</main>
+<footer class="footer">Driven by Passion. Built on Trust. · <a href="./index.html">Back to Sirski Transport</a></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");
+const grid=document.getElementById("sponsorGrid"),status=document.getElementById("status");
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+(async()=>{
+ try{
+  const {data,error}=await sb.from("sponsor_slots").select("slot_number,prize_text,sponsor_name").order("slot_number",{ascending:true});
+  if(error)throw error;
+  const rows=[];
+  for(let n=1;n<=10;n++)rows.push(data?.find(r=>Number(r.slot_number)===n)||{slot_number:n,prize_text:"",sponsor_name:""});
+  grid.innerHTML=rows.map(r=>{
+   const gift=r.prize_text?.trim()?esc(r.prize_text):'<span class="empty">Gift / prize to be announced</span>';
+   const sponsor=r.sponsor_name?.trim()?esc(r.sponsor_name):'<span class="empty">Available for sponsorship</span>';
+   return `<article class="slot"><div class="slot-number">SPONSOR SLOT ${String(r.slot_number).padStart(2,"0")}</div><div class="gift-label">GIFT / PRIZE</div><div class="gift">${gift}</div><div class="sponsor-label">SPONSORED BY</div><div class="sponsor-name">${sponsor}</div></article>`;
+  }).join("");
+  status.textContent="";
+ }catch(e){
+  status.textContent=e.message||"Unable to load sponsor information.";
+ }
+})();
+</script>
+</body>
+</html>
