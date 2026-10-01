@@ -293,7 +293,65 @@ function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;',
 let adminDrivers=[];
 function updateMemberEmail(){const d=adminDrivers.find(x=>x.id===$("memberDriver").value);$("memberEmail").value=d?makeSirskiEmail(d):''}
 function populateAdminSelectors(){const available=adminDrivers.filter(d=>!d.auth_user_id);$("memberDriver").innerHTML=available.length?available.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">All drivers already have member accounts</option>';const linked=adminDrivers.filter(d=>d.auth_user_id);$("resetDriver").innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';$("unlinkDriver").innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';updateMemberEmail()}
-async function loadAdmin(){try{const s=await adminCall('stats');const d=await adminCall('list_drivers');adminDrivers=d.drivers||[];$("adminLogin").style.display='none';$("adminPanel").style.display='block';$("stats").innerHTML=`Total drivers: <b>${s.total_drivers||0}</b> &nbsp; Active: <b>${s.active_drivers||0}</b> &nbsp; Linked members: <b>${s.linked_members||0}</b> &nbsp; Total points: <b>${s.total_points||0}</b>`;populateAdminSelectors();$("driversList").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Display</th><th>Points</th><th>Status</th><th>Member</th><th>Actions</th></tr>'+adminDrivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td>${escapeHtml(x.display_name||'')}</td><td><b>${x.points_balance||0}</b>/20 ${Number(x.points_balance||0)>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td>${x.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${Number(x.points_balance||0)>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>'}catch(e){adminStatus('adminStatus',e.message,true)}}
+let adminContext=null;
+async function getAdminContext(){
+  const r=await adminCall('get_admin_context');
+  adminContext=r;
+  return r;
+}
+function hasPermission(name){
+  return !!adminContext?.is_master || adminContext?.permissions?.[name]===true;
+}
+function applySpinnerAdminPermissions(){
+  const memberAllowed=hasPermission('member_accounts')||hasPermission('link_accounts')||hasPermission('password_reset');
+  const driverAllowed=hasPermission('driver_accounts');
+  $('admin').querySelector('.admin-grid').style.display=(memberAllowed||driverAllowed)?'grid':'none';
+  const boxes=$('admin').querySelectorAll('.admin-box');
+  if(boxes[0]) boxes[0].style.display=driverAllowed?'block':'none';
+  if(boxes[1]) boxes[1].style.display=hasPermission('member_accounts')?'block':'none';
+  if(boxes[2]) boxes[2].style.display=hasPermission('password_reset')?'block':'none';
+  if(boxes[3]) boxes[3].style.display=hasPermission('link_accounts')?'block':'none';
+  const listBox=boxes[4];
+  if(listBox){
+    listBox.style.display=driverAllowed?'block':'none';
+    const h4=listBox.querySelector('h4');
+    const desc=listBox.querySelector('.small');
+    if(h4) h4.textContent='Driver Accounts';
+    if(desc) desc.textContent='Full driver management including active status, points, and member-login links.';
+  }
+}
+async function loadAdmin(){
+  try{
+    const ctx=await getAdminContext();
+    const memberAllowed=hasPermission('member_accounts')||hasPermission('link_accounts')||hasPermission('password_reset');
+    const driverAllowed=hasPermission('driver_accounts');
+
+    $('adminLogin').style.display='none';
+    $('adminPanel').style.display='block';
+    applySpinnerAdminPermissions();
+
+    if(driverAllowed){
+      const s=await adminCall('stats');
+      const d=await adminCall('list_drivers');
+      adminDrivers=d.drivers||[];
+      $('stats').innerHTML=`Total drivers: <b>${s.total_drivers||0}</b> &nbsp; Active: <b>${s.active_drivers||0}</b> &nbsp; Linked members: <b>${s.linked_members||0}</b> &nbsp; Total points: <b>${s.total_points||0}</b>`;
+      $('driversList').innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Display</th><th>Points</th><th>Status</th><th>Member</th><th>Actions</th></tr>'+adminDrivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td>${escapeHtml(x.display_name||'')}</td><td><b>${x.points_balance||0}</b>/20 ${Number(x.points_balance||0)>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td>${x.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${Number(x.points_balance||0)>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>';
+    } else if(memberAllowed){
+      const m=await adminCall('list_member_accounts');
+      adminDrivers=m.members||[];
+      $('stats').innerHTML=`Member records available: <b>${adminDrivers.length}</b>`;
+      populateAdminSelectors();
+      $('driversList').innerHTML='';
+    } else {
+      throw new Error('No Spinner admin permission has been assigned to this account.');
+    }
+    if(memberAllowed) populateAdminSelectors();
+  }catch(e){
+    $('adminPanel').style.display='none';
+    adminStatus('adminStatus',e.message,true);
+    throw e;
+  }
+}
 window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{driver_id:id,active});await loadAdmin()}catch(e){alert(e.message)}};
 window.redeemDriver=async id=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{driver_id:id});alert(`20 points redeemed. Remaining points: ${r.remaining_points||0}`);await loadAdmin()}catch(e){alert(e.message)}};
 $("adminLoginBtn").onclick=async()=>{try{adminStatus('adminStatus','Signing in...');const client=await getSB();const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(error)throw error;await loadAdmin();adminStatus('adminStatus','')}catch(e){adminStatus('adminStatus',e.message,true)}};
@@ -312,7 +370,9 @@ if(configured) getSB().then(client=>client.auth.getSession()).then(async({data})
   // the Admin Dashboard. Only a session that passes the admin Edge Function
   // authorization check is allowed to reveal the admin controls.
   try{
-    await adminCall('stats');
+    const ctx=await adminCall('get_admin_context');
+    const allowed=ctx?.is_master || Object.values(ctx?.permissions||{}).some(v=>v===true);
+    if(!allowed) throw new Error('No Project 1 admin permissions assigned.');
     $('adminDashboardBtn').style.display='inline-flex';
     $('admin').style.display='block';
     await loadAdmin();
