@@ -134,9 +134,10 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
         </div>
 
         <div class="actions">
-          <button id="saveManagedAdmin" class="btn">SAVE ADMIN</button>
-          <button id="cancelManagedAdmin" class="btn secondary">CANCEL</button>
+          <button id="saveManagedAdmin" class="btn" type="button">SAVE ADMIN</button>
+          <button id="cancelManagedAdmin" class="btn secondary" type="button">CANCEL</button>
         </div>
+        <div id="managedAdminSaveStatus" class="status"></div>
       </div>
     </section>
 
@@ -392,7 +393,7 @@ async function loadAdminManagement(){
         <td><span class="pill ${a.active?'':'off'}">${a.active?'Active':'Disabled'}</span></td>
         <td><div class="admin-actions">
           <button class="admin-mini-btn" type="button" data-edit-admin="${esc(a.id)}">EDIT</button>
-          <button class="admin-mini-btn danger" type="button" data-remove-admin="${esc(a.id)}">REMOVE</button>
+          <button class="admin-mini-btn danger" type="button" data-remove-admin="${esc(a.id)}">DELETE ADMIN</button>
         </div></td>
       </tr>`;
     }).join("");
@@ -406,11 +407,11 @@ async function loadAdminManagement(){
     body.querySelectorAll("[data-remove-admin]").forEach(btn=>{
       btn.onclick=async()=>{
         const admin=rows.find(a=>a.id===btn.dataset.removeAdmin);
-        if(!admin||!confirm(`Remove ${admin.email} from Project 1 administrators?`))return;
+        if(!admin||!confirm(`Permanently delete ${admin.email} from Project 1 Admin Management?`))return;
         btn.disabled=true;
         try{
           await adminCall("remove_admin",{id:admin.id});
-          status.textContent=`${admin.email} was removed from Admin Management.`;
+          status.textContent=`${admin.email} was deleted from Admin Management.`;
           if(editingAdminId===admin.id)setManagedAdminForm(null);
           await loadAdminManagement();
         }catch(e){
@@ -429,41 +430,62 @@ async function loadAdminManagement(){
 }
 
 $("saveManagedAdmin").onclick=async()=>{
-  if(!adminContext?.is_master)return;
+  const button=$("saveManagedAdmin");
+  const status=$("adminManagementStatus");
+  const formStatus=$("managedAdminSaveStatus");
+  if(!adminContext?.is_master){
+    formStatus.className="status error";
+    formStatus.textContent="Only the Master Admin can add or edit administrators.";
+    return;
+  }
   const email=$("managedAdminEmail").value.trim().toLowerCase();
   const role=$("managedAdminRole").value;
   const permissions=readPermissionBoxes();
-  const status=$("adminManagementStatus");
   if(!email||!email.includes("@")){
-    status.className="status error";
-    status.textContent="Enter a valid administrator email.";
+    formStatus.className="status error";
+    formStatus.textContent="Enter a valid administrator email.";
     return;
   }
   if(role==="Master Admin"){
-    status.className="status error";
-    status.textContent="Master Admin is reserved for dustdevils29@gmail.com.";
+    formStatus.className="status error";
+    formStatus.textContent="Master Admin is reserved for dustdevils29@gmail.com.";
     return;
   }
-  $("saveManagedAdmin").disabled=true;
+  button.disabled=true;
+  button.textContent=editingAdminId?"SAVING...":"ADDING...";
+  formStatus.className="status";
+  formStatus.textContent=editingAdminId?"Saving administrator changes...":"Adding administrator...";
   status.className="status";
-  status.textContent=editingAdminId?"Saving administrator changes...":"Adding administrator...";
+  status.textContent="";
   try{
+    let result;
     if(editingAdminId){
-      await adminCall("update_admin",{id:editingAdminId,role,permissions});
-      status.textContent=`${email} updated successfully.`;
+      result=await adminCall("update_admin",{id:editingAdminId,role,permissions});
+      formStatus.textContent=`${email} updated successfully.`;
     }else{
-      const r=await adminCall("add_admin",{email,role,permissions});
-      status.textContent=r.invited
-        ? `${email} added. An invitation was sent to the administrator.`
-        : `${email} added. The invitation could not be sent automatically: ${r.invite_error||"unknown error"}.`;
+      result=await adminCall("add_admin",{email,role,permissions});
+      if(result?.success!==true) throw new Error(result?.error||"The administrator could not be added.");
+      if(result.invited){
+        formStatus.textContent=`${email} was added successfully. An invitation was sent.`;
+      }else if(result.invite_error){
+        formStatus.textContent=`${email} was added successfully, but the invitation was not sent: ${result.invite_error}`;
+      }else{
+        formStatus.textContent=`${email} was added successfully.`;
+      }
     }
-    setManagedAdminForm(null);
     await loadAdminManagement();
+    setManagedAdminForm(null);
+    formStatus.textContent=editingAdminId?`${email} updated successfully.`:`${email} was added successfully.`;
   }catch(e){
+    console.error("Admin save failed:",e);
+    const message=e?.message||"Unable to save administrator.";
+    formStatus.className="status error";
+    formStatus.textContent=message;
     status.className="status error";
-    status.textContent=e.message||"Unable to save administrator.";
+    status.textContent=message;
   }finally{
-    $("saveManagedAdmin").disabled=false;
+    button.disabled=false;
+    button.textContent="SAVE ADMIN";
   }
 };
 
@@ -699,6 +721,30 @@ async function loadAdminGallery(){
     empty.textContent="";
   }
 }
+
+async function loadDemoVisitors(){
+  const status=$("demoVisitorsStatus");
+  const table=$("demoVisitorsTable");
+  status.className="status";
+  status.textContent="Loading demo visitors...";
+  table.innerHTML="";
+  try{
+    const r=await adminCall("list_demo_visitors");
+    const visitors=r.visitors||[];
+    if(!visitors.length){
+      status.textContent="No named public demo visitors yet.";
+      return;
+    }
+    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th></tr>'+
+      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td></tr>`).join("")+      '</table></div>';
+    status.textContent=`${visitors.length} named demo use${visitors.length===1?'':'s'} recorded.`;
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to load public demo visitors.";
+  }
+}
+
+$("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
 
 $("galleryRefresh").onclick=()=>loadAdminGallery();
 
