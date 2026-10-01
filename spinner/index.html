@@ -32,7 +32,13 @@
 <div class="admin-box"><h4>Reset Member Password</h4><div class="small">Reset a linked member's password and give them the temporary password.</div><select id="resetDriver" class="input"></select><input id="resetPassword" class="input" type="text" autocomplete="off" placeholder="New temporary password"><button id="generateResetPassword" class="btn secondary">GENERATE PASSWORD</button><button id="resetMember" class="btn">RESET MEMBER PASSWORD</button><div id="resetStatus" class="status"></div></div>
 <div class="admin-box"><h4>Unlink Member Login</h4><div class="small">Removes the driver-to-member link while keeping the driver, points, and Spinner history.</div><select id="unlinkDriver" class="input"></select><button id="unlinkMember" class="btn" style="background:#b72a31;color:#fff">UNLINK MEMBER LOGIN</button><div id="unlinkStatus" class="status"></div></div>
 </div>
-<div class="admin-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h4 style="margin-bottom:4px">Member Accounts</h4><div class="small">Manage active status, points, and member-login links.</div></div><button id="refreshAdmin" class="btn secondary" style="width:auto;padding:10px 14px">REFRESH</button></div><div id="driversList"></div></div>
+<div class="admin-box"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h4 id="accountsListTitle" style="margin-bottom:4px">Driver Accounts</h4><div id="accountsListDesc" class="small">Full driver management including active status, points, and member-login links.</div></div><button id="refreshAdmin" class="btn secondary" style="width:auto;padding:10px 14px">REFRESH</button></div><div id="driversList"></div></div>
+</div>
+<div id="spinnerExtraAdmin" style="display:none;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:16px">
+  <div id="sponsorSlotsAdminBox" class="admin-box" style="display:none"><h4>🎁 Sponsor Slots</h4><div class="small">Edit the gift/prize description and sponsor name for the 10 permanent sponsor slots.</div><div id="sponsorStatus" class="status"></div><div id="sponsorAdminGrid"></div><button id="sponsorRefresh" class="btn secondary">REFRESH SPONSORS</button></div>
+  <div id="demoVisitorsAdminBox" class="admin-box" style="display:none"><h4>👥 Demo Visitors</h4><div class="small">View named public demo users. Blank-name demo spins are not recorded.</div><div id="demoVisitorsStatus" class="status"></div><div id="demoVisitorsTable"></div><button id="demoVisitorsRefresh" class="btn secondary">REFRESH VISITORS</button></div>
+  <div id="memberGalleryAdminBox" class="admin-box" style="display:none;grid-column:1/-1"><h4>📸 Member Gallery</h4><div class="small">View screenshots uploaded by Sirski members and delete screenshots when required.</div><div id="adminGalleryStatus" class="status"></div><div id="adminGalleryGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px"></div><div id="adminGalleryEmpty" class="small"></div><button id="galleryRefresh" class="btn secondary">REFRESH GALLERY</button></div>
+</div>
 </div></section>
 <div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw</div></div>
 <script>
@@ -294,76 +300,85 @@ let adminDrivers=[];
 function updateMemberEmail(){const d=adminDrivers.find(x=>x.id===$("memberDriver").value);$("memberEmail").value=d?makeSirskiEmail(d):''}
 function populateAdminSelectors(){const available=adminDrivers.filter(d=>!d.auth_user_id);$("memberDriver").innerHTML=available.length?available.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">All drivers already have member accounts</option>';const linked=adminDrivers.filter(d=>d.auth_user_id);$("resetDriver").innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';$("unlinkDriver").innerHTML=linked.length?linked.map(d=>`<option value="${escapeHtml(d.id)}">${escapeHtml(d.trucksbook_username)} — ${escapeHtml(d.display_name||'')}</option>`).join(''):'<option value="">No linked member accounts</option>';updateMemberEmail()}
 let adminContext=null;
-async function getAdminContext(){
-  const r=await adminCall('get_admin_context');
-  adminContext=r;
-  return r;
-}
-function hasPermission(name){
-  return !!adminContext?.is_master || adminContext?.permissions?.[name]===true;
-}
+async function getAdminContext(){const r=await adminCall('get_admin_context');adminContext=r;return r}
+function hasPermission(name){return !!adminContext?.is_master || adminContext?.permissions?.[name]===true}
+function show(id,on){const el=$(id);if(el)el.style.display=on?'block':'none'}
 function applySpinnerAdminPermissions(){
-  const memberAllowed=hasPermission('member_accounts')||hasPermission('link_accounts')||hasPermission('password_reset');
-  const driverAllowed=hasPermission('driver_accounts');
-  $('admin').querySelector('.admin-grid').style.display=(memberAllowed||driverAllowed)?'grid':'none';
-  const boxes=$('admin').querySelectorAll('.admin-box');
-  if(boxes[0]) boxes[0].style.display=driverAllowed?'block':'none';
-  if(boxes[1]) boxes[1].style.display=hasPermission('member_accounts')?'block':'none';
-  if(boxes[2]) boxes[2].style.display=hasPermission('password_reset')?'block':'none';
-  if(boxes[3]) boxes[3].style.display=hasPermission('link_accounts')?'block':'none';
+  const member=hasPermission('member_accounts');
+  const reset=hasPermission('password_reset');
+  const link=hasPermission('link_accounts');
+  const driver=hasPermission('driver_accounts');
+  const sponsor=hasPermission('sponsor_slots');
+  const gallery=hasPermission('member_gallery');
+  const demo=hasPermission('demo_visitors');
+  const any=member||reset||link||driver||sponsor||gallery||demo;
+  $('admin').querySelector('.admin-grid').style.display=(member||reset||link||driver)?'grid':'none';
+  const boxes=$('admin').querySelectorAll('.admin-grid .admin-box');
+  if(boxes[0])boxes[0].style.display=driver?'block':'none';
+  if(boxes[1])boxes[1].style.display=member?'block':'none';
+  if(boxes[2])boxes[2].style.display=reset?'block':'none';
+  if(boxes[3])boxes[3].style.display=member?'block':'none';
   const listBox=boxes[4];
   if(listBox){
-    listBox.style.display=driverAllowed?'block':'none';
-    const h4=listBox.querySelector('h4');
-    const desc=listBox.querySelector('.small');
-    if(h4) h4.textContent='Driver Accounts';
-    if(desc) desc.textContent='Full driver management including active status, points, and member-login links.';
+    listBox.style.display=(driver||member||reset||link)?'block':'none';
+    $('accountsListTitle').textContent=driver?'Driver Accounts':'Member Accounts';
+    $('accountsListDesc').textContent=driver?'Full driver management including active status, points, and member-login links.':'Member records available for member-login management.';
   }
+  $('spinnerExtraAdmin').style.display=(sponsor||gallery||demo)?'grid':'none';
+  show('sponsorSlotsAdminBox',sponsor);show('demoVisitorsAdminBox',demo);show('memberGalleryAdminBox',gallery);
+  return any;
+}
+function renderMemberAccounts(){
+  const rows=adminDrivers||[];
+  $('driversList').innerHTML=rows.length
+    ? '<div style="overflow:auto"><table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Member Login</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.display_name||'')}</td><td>${x.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td></tr>`).join('')+'</table></div>'
+    : '<div class="small">No member records found.</div>';
 }
 async function loadAdmin(){
   try{
     const ctx=await getAdminContext();
-    const memberAllowed=hasPermission('member_accounts')||hasPermission('link_accounts')||hasPermission('password_reset');
-    const driverAllowed=hasPermission('driver_accounts');
-
-    $('adminLogin').style.display='none';
-    $('adminPanel').style.display='block';
-    applySpinnerAdminPermissions();
-
-    if(driverAllowed){
+    const member=hasPermission('member_accounts');
+    const reset=hasPermission('password_reset');
+    const link=hasPermission('link_accounts');
+    const driver=hasPermission('driver_accounts');
+    const sponsor=hasPermission('sponsor_slots');
+    const gallery=hasPermission('member_gallery');
+    const demo=hasPermission('demo_visitors');
+    if(!applySpinnerAdminPermissions())throw new Error('No Spinner admin permission has been assigned to this account.');
+    $('adminLogin').style.display='none';$('adminPanel').style.display='block';
+    if(driver){
       const s=await adminCall('stats');
       const d=await adminCall('list_drivers');
       adminDrivers=d.drivers||[];
       $('stats').innerHTML=`Total drivers: <b>${s.total_drivers||0}</b> &nbsp; Active: <b>${s.active_drivers||0}</b> &nbsp; Linked members: <b>${s.linked_members||0}</b> &nbsp; Total points: <b>${s.total_points||0}</b>`;
-      $('driversList').innerHTML='<table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Display</th><th>Points</th><th>Status</th><th>Member</th><th>Actions</th></tr>'+adminDrivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td>${escapeHtml(x.display_name||'')}</td><td><b>${x.points_balance||0}</b>/20 ${Number(x.points_balance||0)>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td>${x.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${Number(x.points_balance||0)>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table>';
-    } else if(memberAllowed){
-      const m=await adminCall('list_member_accounts');
-      adminDrivers=m.members||[];
-      $('stats').innerHTML=`Member records available: <b>${adminDrivers.length}</b>`;
-      populateAdminSelectors();
-      $('driversList').innerHTML='';
-    } else {
-      throw new Error('No Spinner admin permission has been assigned to this account.');
-    }
-    if(memberAllowed) populateAdminSelectors();
-  }catch(e){
-    $('adminPanel').style.display='none';
-    adminStatus('adminStatus',e.message,true);
-    throw e;
-  }
+      $('driversList').innerHTML='<div style="overflow:auto"><table class="table"><tr><th>TrucksBook</th><th>ID</th><th>Display</th><th>Points</th><th>Status</th><th>Member</th><th>Actions</th></tr>'+adminDrivers.map(x=>`<tr><td>${escapeHtml(x.trucksbook_username)}</td><td>${escapeHtml(x.trucksbook_id)}</td><td>${escapeHtml(x.display_name||'')}</td><td><b>${x.points_balance||0}</b>/20 ${Number(x.points_balance||0)>=20?' <span class="pill">Redeemable</span>':''}</td><td><span class="pill ${x.active?'':'off'}">${x.active?'Active':'Disabled'}</span></td><td>${x.auth_user_id?'<span class="pill">✓ Linked</span>':'<span class="pill off">Not linked</span>'}</td><td><button class="link" onclick="toggleDriver('${x.id}',${!x.active})">${x.active?'Disable':'Enable'}</button>${Number(x.points_balance||0)>=20?` <button class="link" onclick="redeemDriver('${x.id}')">Redeem 20</button>`:''}</td></tr>`).join('')+'</table></div>';
+    } else if(member||reset||link){
+      const m=await adminCall('list_member_accounts');adminDrivers=m.members||[];renderMemberAccounts();populateAdminSelectors();$('stats').innerHTML=`Member records available: <b>${adminDrivers.length}</b>`;
+    } else $('stats').innerHTML='';
+    if(member||reset||link)populateAdminSelectors();
+    if(sponsor)await loadSponsorSlots();
+    if(demo)await loadDemoVisitors();
+    if(gallery)await loadAdminGallery();
+  }catch(e){$('adminPanel').style.display='none';adminStatus('adminStatus',e.message,true);throw e}
 }
-window.toggleDriver=async(id,active)=>{try{await adminCall('set_active',{driver_id:id,active});await loadAdmin()}catch(e){alert(e.message)}};
-window.redeemDriver=async id=>{if(!confirm('Redeem 20 points for this driver?'))return;try{const r=await adminCall('redeem_points',{driver_id:id});alert(`20 points redeemed. Remaining points: ${r.remaining_points||0}`);await loadAdmin()}catch(e){alert(e.message)}};
+async function loadSponsorSlots(){
+  const grid=$('sponsorAdminGrid');const status=$('sponsorStatus');grid.innerHTML='';status.textContent='Loading sponsor slots...';
+  try{const r=await adminCall('list_sponsor_slots');const data=r.slots||[];for(let n=1;n<=10;n++){const row=data.find(x=>Number(x.slot_number)===n)||{slot_number:n,prize_text:'',sponsor_name:''};const wrap=document.createElement('div');wrap.style.cssText='border-top:1px solid rgba(255,255,255,.08);padding:10px 0';wrap.innerHTML=`<div class="small"><b>SLOT ${String(n).padStart(2,'0')}</b></div><input class="input sponsor-prize" maxlength="120" value="${escapeHtml(row.prize_text||'')}" placeholder="Gift / Prize Description"><input class="input sponsor-name" maxlength="80" value="${escapeHtml(row.sponsor_name||'')}" placeholder="Sponsor Name"><button class="btn sponsor-save" type="button">SAVE</button>`;wrap.querySelector('.sponsor-save').onclick=async()=>{const b=wrap.querySelector('.sponsor-save');b.disabled=true;b.textContent='SAVING...';try{await adminCall('save_sponsor_slot',{slot_number:n,prize_text:wrap.querySelector('.sponsor-prize').value.trim(),sponsor_name:wrap.querySelector('.sponsor-name').value.trim()});status.textContent=`Slot ${String(n).padStart(2,'0')} saved successfully.`}catch(e){status.textContent=e.message||'Unable to save sponsor slot.'}finally{b.disabled=false;b.textContent='SAVE'}};grid.appendChild(wrap)}status.textContent='Sponsor slots loaded.'}catch(e){status.textContent=e.message||'Unable to load sponsor slots.'}}
+async function loadDemoVisitors(){const status=$('demoVisitorsStatus');const table=$('demoVisitorsTable');status.textContent='Loading demo visitors...';table.innerHTML='';try{const r=await adminCall('list_demo_visitors');const v=r.visitors||[];if(!v.length){status.textContent='No named public demo visitors yet.';return}table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor</th><th>Date / Time</th><th>Spin</th></tr>'+v.map(x=>`<tr><td><b>${escapeHtml(x.visitor_name)}</b></td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${Number(x.spin_number)||0}/5</td></tr>`).join('')+'</table></div>';status.textContent=`${v.length} named demo use${v.length===1?'':'s'} recorded.`}catch(e){status.textContent=e.message||'Unable to load demo visitors.'}}
+async function loadAdminGallery(){const status=$('adminGalleryStatus'),grid=$('adminGalleryGrid'),empty=$('adminGalleryEmpty');status.textContent='Loading gallery...';grid.innerHTML='';empty.textContent='';try{const r=await adminCall('list_gallery');const data=r.gallery||[];if(!data.length){empty.textContent='No member screenshots have been uploaded yet.';return}for(const row of data){const card=document.createElement('div');card.style.cssText='border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;background:rgba(0,0,0,.18)';card.innerHTML=`<img src="${escapeHtml(row.public_url||'')}" alt="Sirski member screenshot" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"><div style="padding:10px"><div><b>${escapeHtml(row.caption||'Sirski Transport screenshot')}</b></div><div class="small">Uploader: ${escapeHtml(row.user_id||'Sirski Member')}<br>Uploaded: ${escapeHtml(new Date(row.created_at).toLocaleString())}</div><button class="btn secondary gallery-delete" type="button" style="margin-top:10px">DELETE SCREENSHOT</button></div>`;card.querySelector('.gallery-delete').onclick=async()=>{if(!confirm('Delete this member screenshot?'))return;const b=card.querySelector('.gallery-delete');b.disabled=true;b.textContent='DELETING...';try{await adminCall('delete_gallery',{id:row.id});status.textContent='Screenshot deleted.';await loadAdminGallery()}catch(e){b.disabled=false;b.textContent='DELETE SCREENSHOT';status.textContent=e.message||'Unable to delete screenshot.'}};grid.appendChild(card)}}catch(e){status.textContent=e.message||'Unable to load member gallery.'}}
 $("adminLoginBtn").onclick=async()=>{try{adminStatus('adminStatus','Signing in...');const client=await getSB();const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(error)throw error;await loadAdmin();adminStatus('adminStatus','')}catch(e){adminStatus('adminStatus',e.message,true)}};
 $("logout").onclick=async()=>{try{const client=await getSB();await client.auth.signOut()}finally{location.reload()}};
-$("addDriver").onclick=async()=>{try{adminStatus('driverStatus','Registering driver...');await adminCall('add_driver',{trucksbook_id:$('tbid').value.trim(),trucksbook_username:$('tbuser').value.trim(),display_name:$('display').value.trim(),pin:''});$('tbid').value=$('tbuser').value=$('display').value='';adminStatus('driverStatus','Driver registered successfully.');await loadAdmin()}catch(e){adminStatus('driverStatus',e.message,true)}};
+$("addDriver").onclick=async()=>{if(!hasPermission('driver_accounts')){adminStatus('driverStatus','Permission required: Driver Accounts.',true);return}try{adminStatus('driverStatus','Registering driver...');await adminCall('add_driver',{trucksbook_id:$('tbid').value.trim(),trucksbook_username:$('tbuser').value.trim(),display_name:$('display').value.trim(),pin:''});$('tbid').value=$('tbuser').value=$('display').value='';adminStatus('driverStatus','Driver registered successfully.');await loadAdmin()}catch(e){adminStatus('driverStatus',e.message,true)}};
 $("memberDriver").onchange=updateMemberEmail;
 $("generateMemberPassword").onclick=()=>{$('memberPassword').value=randomPassword();adminStatus('createMemberStatus','Temporary password generated. Give it to the member securely.')};
-$("createMember").onclick=async()=>{const driver_id=$('memberDriver').value,email=$('memberEmail').value.trim(),password=$('memberPassword').value,display_name=$('memberDisplay').value.trim();if(!driver_id||!email||!password){adminStatus('createMemberStatus','Driver, email, and temporary password are required.',true);return}if(password.length<6){adminStatus('createMemberStatus','Password must be at least 6 characters.',true);return}try{$('createMember').disabled=true;adminStatus('createMemberStatus','Creating member login...');const r=await adminCall('create_member',{driver_id,email,password,display_name});adminStatus('createMemberStatus',`Member login created for ${r.email||email}.`);$('memberPassword').value='';$('memberDisplay').value='';await loadAdmin()}catch(e){adminStatus('createMemberStatus',e.message,true)}finally{$('createMember').disabled=false}};
+$("createMember").onclick=async()=>{if(!hasPermission('member_accounts')){adminStatus('createMemberStatus','Permission required: Member Accounts.',true);return}const driver_id=$('memberDriver').value,email=$('memberEmail').value.trim(),password=$('memberPassword').value,display_name=$('memberDisplay').value.trim();if(!driver_id||!email||!password){adminStatus('createMemberStatus','Driver, email, and temporary password are required.',true);return}if(password.length<6){adminStatus('createMemberStatus','Password must be at least 6 characters.',true);return}try{$('createMember').disabled=true;adminStatus('createMemberStatus','Creating member login...');const r=await adminCall('create_member',{driver_id,email,password,display_name});adminStatus('createMemberStatus',`Member login created for ${r.email||email}.`);$('memberPassword').value='';$('memberDisplay').value='';await loadAdmin()}catch(e){adminStatus('createMemberStatus',e.message,true)}finally{$('createMember').disabled=false}};
 $("generateResetPassword").onclick=()=>{$('resetPassword').value=randomPassword();adminStatus('resetStatus','Temporary password generated. Give it to the member securely.')};
-$("resetMember").onclick=async()=>{const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;if(!driver_id||!new_password){adminStatus('resetStatus','Select a linked member and enter a temporary password.',true);return}if(new_password.length<6){adminStatus('resetStatus','Temporary password must be at least 6 characters.',true);return}try{$('resetMember').disabled=true;adminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});adminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`);$('resetPassword').value=''}catch(e){adminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
-$("unlinkMember").onclick=async()=>{const driver_id=$('unlinkDriver').value;if(!driver_id){adminStatus('unlinkStatus','Select a linked member first.',true);return}const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the Sirski member login for ${d?.trucksbook_username||'this driver'}? The driver, points, and Spinner history will remain.`))return;try{$('unlinkMember').disabled=true;adminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});adminStatus('unlinkStatus','Member login unlinked. The driver and Spinner data were kept.');await loadAdmin()}catch(e){adminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
+$("resetMember").onclick=async()=>{if(!hasPermission('password_reset')){adminStatus('resetStatus','Permission required: Reset Member Passwords.',true);return}const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;if(!driver_id||!new_password){adminStatus('resetStatus','Select a linked member and enter a temporary password.',true);return}if(new_password.length<6){adminStatus('resetStatus','Temporary password must be at least 6 characters.',true);return}try{$('resetMember').disabled=true;adminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});adminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`);$('resetPassword').value=''}catch(e){adminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
+$("unlinkMember").onclick=async()=>{if(!hasPermission('member_accounts')){adminStatus('unlinkStatus','Permission required: Member Accounts.',true);return}const driver_id=$('unlinkDriver').value;if(!driver_id){adminStatus('unlinkStatus','Select a linked member first.',true);return}const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the Sirski member login for ${d?.trucksbook_username||'this driver'}? The driver, points, and Spinner history will remain.`))return;try{$('unlinkMember').disabled=true;adminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});adminStatus('unlinkStatus','Member login unlinked. The driver and Spinner data were kept.');await loadAdmin()}catch(e){adminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
 $("refreshAdmin").onclick=()=>loadAdmin();
+$("sponsorRefresh").onclick=()=>loadSponsorSlots();
+$("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
+$("galleryRefresh").onclick=()=>loadAdminGallery();
 if(configured) getSB().then(client=>client.auth.getSession()).then(async({data})=>{
   if(!data.session) return;
   // A normal Sirski member may have a valid Supabase session, but must not see
