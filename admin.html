@@ -53,7 +53,11 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 <div class="wrap">
   <div class="top">
     <div class="brand"><img class="logo" src="./sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI MEMBER ADMIN</h1><p>Create and manage individual Sirski Transport member logins.</p></div></div>
-    <button id="logout" class="btn secondary">Log out</button>
+    <div class="admin-context">
+      <span id="adminEmailBadge" class="admin-email-badge"></span>
+      <span id="adminRoleBadge" class="admin-role-badge"></span>
+      <button id="logout" class="btn secondary">Log out</button>
+    </div>
   </div>
 
   <section id="loginCard" class="card login">
@@ -491,6 +495,8 @@ async function initializeAdmin(){
     adminContext=null;
     $("loginCard").style.display="block";
     $("panel").style.display="none";
+    $("loginStatus").className="status error";
+    $("loginStatus").textContent=e.message||"Unable to initialize the admin dashboard.";
   }
 }
 
