@@ -310,6 +310,7 @@ $("copyEmail").onclick=async()=>{
 };
 let adminContext=null;
 let editingAdminId=null;
+let adminInitPromise=null;
 
 const permissionLabels={
   sponsor_slots:"Sponsor Slots",
@@ -466,7 +467,9 @@ $("saveManagedAdmin").onclick=async()=>{
   }
 };
 
-async function initializeAdmin(){
+function initializeAdmin(){
+  if(adminInitPromise) return adminInitPromise;
+  adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
     adminContext=ctx;
@@ -493,11 +496,14 @@ async function initializeAdmin(){
     setManagedAdminForm(null);
   }catch(e){
     adminContext=null;
-    $("loginCard").style.display="block";
-    $("panel").style.display="none";
     $("loginStatus").className="status error";
     $("loginStatus").textContent=e.message||"Unable to initialize the admin dashboard.";
+    throw e;
+  } finally {
+    adminInitPromise=null;
   }
+  })();
+  return adminInitPromise;
 }
 
 $("loginBtn").onclick=async()=>{
