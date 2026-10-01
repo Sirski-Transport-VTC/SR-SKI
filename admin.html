@@ -239,6 +239,7 @@ const cfg=window.SIRSKI_CONFIG||{};
 const sb=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
 const $=id=>document.getElementById(id);
 let drivers=[];
+let memberAccounts=[];
 
 async function adminCall(action,body={}){
   const {data:{session}}=await sb.auth.getSession();
@@ -266,31 +267,37 @@ function makeSirskiEmail(driver){
 }
 function selectedDriver(){
   const id=$("driver").value;
-  return drivers.find(d=>d.id===id)||null;
+  return memberAccounts.find(d=>d.id===id)||null;
 }
 function updateGeneratedEmail(){
   const d=selectedDriver();
   $("email").value=d?makeSirskiEmail(d):"";
 }
 
-async function loadDrivers(){
-  const r=await adminCall("list_drivers");
-  drivers=r.drivers||[];
-  $("driver").innerHTML=drivers.map(d=>{
-    const disabled=d.auth_user_id? " disabled":"";
-    return `<option value="${esc(d.id)}"${disabled}>${esc(d.trucksbook_username)} — ${esc(d.display_name||"")} ${d.auth_user_id?"(already linked)":""}</option>`;
-  }).join("");
-  const available=drivers.filter(d=>!d.auth_user_id);
-  if(!available.length) $("driver").innerHTML='<option value="">All drivers already have member accounts</option>';
+async function loadMemberAccounts(){
+  const r=await adminCall("list_member_accounts");
+  memberAccounts=r.members||[];
+
+  const available=memberAccounts.filter(d=>!d.auth_user_id);
+  $("driver").innerHTML=available.length
+    ? available.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
+    : '<option value="">All member records already have member accounts</option>';
   updateGeneratedEmail();
-  const linked=drivers.filter(d=>d.auth_user_id);
+
+  const linked=memberAccounts.filter(d=>d.auth_user_id);
   $("resetDriver").innerHTML=linked.length
     ? linked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
     : '<option value="">No linked member accounts</option>';
-  const unlinked=drivers.filter(d=>!d.auth_user_id);
+
+  const unlinked=memberAccounts.filter(d=>!d.auth_user_id);
   $("linkDriver").innerHTML=unlinked.length
     ? unlinked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
-    : '<option value="">All drivers are already linked</option>';
+    : '<option value="">All member records are already linked</option>';
+}
+
+async function loadDrivers(){
+  const r=await adminCall("list_drivers");
+  drivers=r.drivers||[];
   $("driversTable").innerHTML='<table class="table"><tr><th>TrucksBook</th><th>Display</th><th>Points</th><th>Status</th><th>Member Login</th><th>Recovery Email</th><th>Recovery Status</th></tr>'+
     drivers.map(d=>{
       const recovery=d.recovery_email||"—";
@@ -302,6 +309,7 @@ async function loadDrivers(){
     }).join("")+
     '</table>';
 }
+
 $("driver").onchange=updateGeneratedEmail;
 $("copyEmail").onclick=async()=>{
   const email=$("email").value;
@@ -511,6 +519,7 @@ function initializeAdmin(){
     $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!ctx.is_master);
 
     if(ctx.is_master)await loadAdminManagement();
+    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)await loadMemberAccounts();
     if(p.driver_accounts===true||ctx.is_master)await loadDrivers();
     if(p.member_gallery===true||ctx.is_master)await loadAdminGallery();
     if(p.demo_visitors===true||ctx.is_master)await loadDemoVisitors();
@@ -551,7 +560,7 @@ $("create").onclick=async()=>{
     const r=await adminCall("create_member",{driver_id,email,password,display_name});
     $("createStatus").textContent=`Member account created for ${r.trucksbook_username||"driver"}. They can now use the Sirski Member Login.`;
     $("email").value=$("password").value=$("display").value="";
-    await loadDrivers();
+    await loadMemberAccounts();
   }catch(e){$("createStatus").textContent=e.message;$("createStatus").className="status error";}
   finally{$("create").disabled=false}
 };
@@ -577,7 +586,7 @@ $("linkMember").onclick=async()=>{
     const r=await adminCall("link_existing_member",{driver_id,auth_user_id});
     $("linkStatus").textContent=`Existing member login linked successfully for ${r.trucksbook_username||"member"}.`;
     $("linkAuthUserId").value="";
-    await loadDrivers();
+    await loadMemberAccounts();
   }catch(e){
     $("linkStatus").textContent=e.message;
     $("linkStatus").className="status error";
@@ -586,7 +595,7 @@ $("linkMember").onclick=async()=>{
   }
 };
 
-$("refreshLinkDrivers").onclick=()=>loadDrivers().catch(e=>{
+$("refreshLinkDrivers").onclick=()=>loadMemberAccounts().catch(e=>{
   $("linkStatus").textContent=e.message;
   $("linkStatus").className="status error";
 });
@@ -604,7 +613,7 @@ $("resetMember").onclick=async()=>{
   }catch(e){$("resetStatus").textContent=e.message;$("resetStatus").className="status error";}
   finally{$("resetMember").disabled=false}
 };
-$("refresh").onclick=()=>loadDrivers().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
+$("refresh").onclick=()=>loadMemberAccounts().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session)await initializeAdmin();})();
 
@@ -686,7 +695,7 @@ async function loadAdminGallery(){
       caption.textContent=row.caption||"Sirski Transport screenshot";
       const meta=document.createElement("div");
       meta.className="admin-gallery-meta";
-      const uploader=drivers.find(d=>d.auth_user_id===row.user_id);
+      const uploader=memberAccounts.find(d=>d.auth_user_id===row.user_id);
       const uploaderName=uploader?.display_name||uploader?.trucksbook_username||"Sirski Member";
       meta.textContent=uploaderName+" • Uploaded: "+new Date(row.created_at).toLocaleString();
       const del=document.createElement("button");
