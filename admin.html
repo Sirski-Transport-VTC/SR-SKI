@@ -141,6 +141,17 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       </div>
     </section>
 
+    <section id="changeOwnPasswordSection" class="card">
+      <h2>🔐 Change My Admin Password</h2>
+      <p class="small">Change the password for the administrator account currently signed in. This does not change any member account passwords.</p>
+      <div class="row">
+        <label class="label">New Password<input id="ownNewPassword" class="input" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label>
+        <label class="label">Confirm New Password<input id="ownConfirmPassword" class="input" type="password" autocomplete="new-password" placeholder="Repeat new password"></label>
+      </div>
+      <div class="actions"><button id="changeOwnPassword" class="btn">CHANGE MY PASSWORD</button></div>
+      <div id="ownPasswordStatus" class="status"></div>
+    </section>
+
     <section id="memberAccountsSection" class="card">
       <h2>Create Sirski Member Login</h2>
       <p class="small">Select an existing driver. The system prepares a personalized <b>@sirski-transport.com</b> login address. The driver's existing Spinner points remain unchanged.</p>
@@ -401,6 +412,7 @@ async function loadAdminManagement(){
         <td><span class="pill ${a.active?'':'off'}">${a.active?'Active':'Disabled'}</span></td>
         <td><div class="admin-actions">
           <button class="admin-mini-btn" type="button" data-edit-admin="${esc(a.id)}">EDIT</button>
+          <button class="admin-mini-btn" type="button" data-reset-admin="${esc(a.id)}">RESET PASSWORD</button>
           <button class="admin-mini-btn danger" type="button" data-remove-admin="${esc(a.id)}">DELETE ADMIN</button>
         </div></td>
       </tr>`;
@@ -412,6 +424,31 @@ async function loadAdminManagement(){
         window.scrollTo({top:$("adminManagementSection").scrollHeight,behavior:"smooth"});
       };
     });
+    body.querySelectorAll("[data-reset-admin]").forEach(btn=>{
+      btn.onclick=async()=>{
+        const admin=rows.find(a=>a.id===btn.dataset.resetAdmin);
+        if(!admin)return;
+        const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+        let temp="";
+        const values=new Uint32Array(12);
+        crypto.getRandomValues(values);
+        values.forEach(n=>temp+=chars[n%chars.length]);
+        if(!confirm(`Reset the password for ${admin.email}?\n\nTemporary password: ${temp}\n\nGive this temporary password to the administrator securely. Continue?`))return;
+        btn.disabled=true;
+        btn.textContent="RESETTING...";
+        try{
+          const r=await adminCall("reset_admin_password",{id:admin.id,new_password:temp});
+          status.className="status";
+          status.textContent=`${admin.email} password reset successfully. Temporary password: ${r.temporary_password||temp}`;
+        }catch(e){
+          btn.disabled=false;
+          btn.textContent="RESET PASSWORD";
+          status.className="status error";
+          status.textContent=e.message||"Unable to reset administrator password.";
+        }
+      };
+    });
+
     body.querySelectorAll("[data-remove-admin]").forEach(btn=>{
       btn.onclick=async()=>{
         const admin=rows.find(a=>a.id===btn.dataset.removeAdmin);
@@ -550,6 +587,29 @@ $("loginBtn").onclick=async()=>{
     $("loginStatus").className="status error";
   }
 };
+$("changeOwnPassword").onclick=async()=>{
+  const newPassword=$("ownNewPassword").value;
+  const confirmPassword=$("ownConfirmPassword").value;
+  const status=$("ownPasswordStatus");
+  status.className="status";
+  status.textContent="";
+  if(newPassword.length<6){status.className="status error";status.textContent="Password must be at least 6 characters.";return}
+  if(newPassword!==confirmPassword){status.className="status error";status.textContent="Passwords do not match.";return}
+  const button=$("changeOwnPassword");
+  button.disabled=true;
+  status.textContent="Changing password...";
+  try{
+    const {error}=await sb.auth.updateUser({password:newPassword});
+    if(error)throw error;
+    $("ownNewPassword").value=$("ownConfirmPassword").value="";
+    status.className="status";
+    status.textContent="Your admin password was changed successfully.";
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to change your password.";
+  }finally{button.disabled=false}
+};
+
 $("create").onclick=async()=>{
   const driver_id=$("driver").value,email=$("email").value.trim(),password=$("password").value,display_name=$("display").value.trim();
   $("createStatus").className="status";$("createStatus").textContent="";
