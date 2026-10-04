@@ -531,7 +531,7 @@ async function resetSelectedSecondaryAdmin(){
   finally{button.disabled=false;button.textContent="RESET PASSWORD";}
 }
 async function loadAdminManagement(){
-  if(!adminContext?.is_master)return;
+  if(!isMasterAdminContext())return;
   const status=$("adminManagementStatus");
   const body=$("adminTableBody");
   status.className="status";
@@ -624,7 +624,7 @@ $("saveManagedAdmin").onclick=async()=>{
   const button=$("saveManagedAdmin");
   const status=$("adminManagementStatus");
   const formStatus=$("managedAdminSaveStatus");
-  if(!adminContext?.is_master){
+  if(!isMasterAdminContext()){
     formStatus.className="status error";
     formStatus.textContent="Only the Master Admin can add or edit administrators.";
     return;
@@ -687,12 +687,15 @@ $("saveManagedAdmin").onclick=async()=>{
   }
 };
 
+function isMasterAdminContext(ctx=adminContext){return ctx?.is_master===true || ctx?.role==="Master Admin";}
+
 function initializeAdmin(){
   if(adminInitPromise) return adminInitPromise;
   adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
     adminContext=ctx;
+    adminContext.is_master=isMasterAdminContext(ctx);
     $("adminEmailBadge").textContent=ctx.email||"Administrator";
     $("adminRoleBadge").textContent=(ctx.role||"Custom Admin").toUpperCase();
     $("loginCard").style.display="none";
