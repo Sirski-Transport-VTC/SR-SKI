@@ -623,12 +623,24 @@ $("saveManagedAdmin").onclick=async()=>{
     }else{
       result=await adminCall("add_admin",{email,role,permissions});
       if(result?.success!==true) throw new Error(result?.error||"The administrator could not be added.");
-      formStatus.textContent=`${email} was added successfully.`;
-       if(result.temporary_password) showAdminTempPassword(email,result.temporary_password);
+      formStatus.textContent=result.restored
+        ? `${email} was restored successfully.`
+        : `${email} was added successfully.`;
+       if(result.temporary_password){
+         showAdminTempPassword(email,result.temporary_password);
+         $("adminTempTitle").textContent=result.restored
+           ? "Administrator Restored Successfully"
+           : "Administrator Added Successfully";
+       }
        }
     await loadAdminManagement();
     setManagedAdminForm(null);
-    formStatus.textContent=editingAdminId?`${email} updated successfully.`:`${email} was added successfully.`;
+    if(!editingAdminId){
+      if(result?.restored) formStatus.textContent=`${email} was restored successfully.`;
+      else formStatus.textContent=`${email} was added successfully.`;
+    }else{
+      formStatus.textContent=`${email} updated successfully.`;
+    }
   }catch(e){
     console.error("Admin save failed:",e);
     const message=e?.message||"Unable to save administrator.";
