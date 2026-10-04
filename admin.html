@@ -219,25 +219,18 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
         <label class="label">Temporary Password<input id="newMemberPassword" class="input" type="password" placeholder="At least 6 characters"></label>
         <label class="label">Display Name<input id="newMemberDisplay" class="input" type="text" placeholder="Member's display name"></label>
       </div>
-      <div class="notice"><b>Important:</b> this creates the Sirski login only. The member's TrucksBook driver is added later by the Master Admin on the Spinner page, then an authorized admin can link the existing Sirski login.</div>
+      <label class="permission-box" style="margin-top:14px"><input id="newMemberAwaitingTrucksBook" type="checkbox" checked> Add this member to <b>New Drivers / Awaiting TrucksBook</b></label>
+      <label class="label">Awaiting TrucksBook Note (Optional)<input id="newMemberAwaitingNote" class="input" type="text" maxlength="250" placeholder="e.g. Waiting for TrucksBook registration"></label>
+      <div class="notice"><b>Important:</b> this creates the Sirski login now. If the awaiting option is selected, the member is also added to the shared New Drivers / Awaiting TrucksBook list. The Master Admin can later add the actual TrucksBook driver from the Spinner page, then an authorized admin can link the existing Sirski login.</div>
       <div class="actions"><button id="addNewMember" class="btn">ADD NEW MEMBER</button><button id="generateNewMemberPassword" class="btn secondary" type="button">GENERATE PASSWORD</button></div>
       <div id="addNewMemberStatus" class="status"></div>
     </section>
 
-
     <section id="pendingDriversSection" class="card perm-hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <div>
-          <h2>🕐 New Drivers / Awaiting TrucksBook</h2>
-          <p class="small">Add a new person who is waiting for their TrucksBook driver registration. The Master Admin can register the actual TrucksBook driver later from the Spinner page.</p>
-        </div>
+        <div><h2>🕐 New Drivers / Awaiting TrucksBook</h2><p class="small">Members added above can appear here while waiting for their actual TrucksBook driver registration.</p></div>
         <button id="pendingDriversRefresh" class="btn secondary" type="button">REFRESH</button>
       </div>
-      <div class="row">
-        <label class="label">Name<input id="pendingDriverName" class="input" type="text" maxlength="120" placeholder="Driver / member name"></label>
-        <label class="label">Note (Optional)<input id="pendingDriverNote" class="input" type="text" maxlength="250" placeholder="e.g. Waiting for TrucksBook"></label>
-      </div>
-      <div class="actions"><button id="addPendingDriver" class="btn" type="button">ADD TO AWAITING LIST</button></div>
       <div id="pendingDriversStatus" class="status"></div>
       <div id="pendingDriversTable"></div>
     </section>
@@ -805,44 +798,22 @@ $("addNewMember").onclick=async()=>{
   const username=$("newMemberUsername").value.trim().toLowerCase();
   const password=$("newMemberPassword").value;
   const display_name=$("newMemberDisplay").value.trim();
+  const addAwaiting=$("newMemberAwaitingTrucksBook").checked;
+  const awaitingNote=$("newMemberAwaitingNote").value.trim();
   $("addNewMemberStatus").className="status";$("addNewMemberStatus").textContent="";
   if(!username||!password||!display_name){$("addNewMemberStatus").textContent="Username, password, and display name are required.";return}
   if(password.length<6){$("addNewMemberStatus").textContent="Password must be at least 6 characters.";return}
   $("addNewMember").disabled=true;$("addNewMemberStatus").textContent="Creating new member account...";
   try{
     const r=await adminCall("add_new_member",{username,password,display_name});
-    $("addNewMemberStatus").textContent=`New Sirski member created: ${r.email}. The account is ready to be linked later.`;
+    if(addAwaiting)await adminCall("add_pending_driver",{display_name,note:awaitingNote});
+    $("addNewMemberStatus").textContent=addAwaiting?`New Sirski member created: ${r.email} and added to Awaiting TrucksBook.`:`New Sirski member created: ${r.email}. The account is ready to be linked later.`;
     $("newMemberUsername").value=$("newMemberEmail").value=$("newMemberPassword").value=$("newMemberDisplay").value="";
+    $("newMemberAwaitingNote").value="";$("newMemberAwaitingTrucksBook").checked=true;
+    if(addAwaiting)await loadPendingDrivers();
   }catch(e){$("addNewMemberStatus").textContent=e.message;$("addNewMemberStatus").className="status error";}
   finally{$("addNewMember").disabled=false}
 };
-
-function renderPendingDrivers(){
-  const table=$("pendingDriversTable");
-  if(!table)return;
-  if(!pendingDrivers.length){table.innerHTML='<div class="small" style="margin-top:18px">No drivers are currently awaiting TrucksBook.</div>';return;}
-  const canDelete=adminContext?.is_master===true;
-  table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Name</th><th>Note</th><th>Added By</th><th>Date / Time</th><th>Actions</th></tr>'+pendingDrivers.map(row=>{
-    const action=canDelete?`<button class="admin-mini-btn danger" type="button" data-delete-pending="${esc(row.id)}">DELETE</button>`:'<span class="small">—</span>';
-    return `<tr><td><b>${esc(row.display_name||"")}</b></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
-  }).join('')+'</table></div>';
-  if(canDelete)table.querySelectorAll("[data-delete-pending]").forEach(btn=>{btn.onclick=async()=>{const id=btn.dataset.deletePending;if(!id||!confirm("Delete this pending driver?"))return;btn.disabled=true;btn.textContent="DELETING...";try{await adminCall("delete_pending_driver",{id});$("pendingDriversStatus").className="status";$("pendingDriversStatus").textContent="Pending driver deleted.";await loadPendingDrivers();}catch(e){btn.disabled=false;btn.textContent="DELETE";$("pendingDriversStatus").className="status error";$("pendingDriversStatus").textContent=e.message||"Unable to delete pending driver.";}};});
-}
-
-async function loadPendingDrivers(){
-  const status=$("pendingDriversStatus"),table=$("pendingDriversTable");if(!status||!table)return;
-  status.className="status";status.textContent="Loading awaiting TrucksBook list...";
-  try{const r=await adminCall("list_pending_drivers");pendingDrivers=r.pending_drivers||[];renderPendingDrivers();status.textContent=pendingDrivers.length?`${pendingDrivers.length} driver${pendingDrivers.length===1?"":"s"} awaiting TrucksBook.`:"No drivers are currently awaiting TrucksBook.";}catch(e){status.className="status error";status.textContent=e.message||"Unable to load awaiting TrucksBook list.";table.innerHTML="";}
-}
-
-$("addPendingDriver").onclick=async()=>{
-  const name=$("pendingDriverName").value.trim(),note=$("pendingDriverNote").value.trim(),status=$("pendingDriversStatus"),button=$("addPendingDriver");
-  status.className="status";status.textContent="";if(!name){status.className="status error";status.textContent="Name is required.";return;}
-  button.disabled=true;button.textContent="ADDING...";status.textContent="Adding driver to the awaiting TrucksBook list...";
-  try{await adminCall("add_pending_driver",{display_name:name,note});$("pendingDriverName").value="";$("pendingDriverNote").value="";await loadPendingDrivers();status.textContent="Driver added to the awaiting TrucksBook list.";}catch(e){status.className="status error";status.textContent=e.message||"Unable to add pending driver.";}finally{button.disabled=false;button.textContent="ADD TO AWAITING LIST";}
-};
-
-$("pendingDriversRefresh").onclick=()=>loadPendingDrivers();
 
 $("create").onclick=async()=>{
   const driver_id=$("driver").value,email=$("email").value.trim(),password=$("password").value,display_name=$("display").value.trim();
