@@ -178,11 +178,12 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <p class="small">Use this when a member already has a Sirski/Supabase login but their driver record shows <b>Not linked</b>. This does not create or delete an account.</p>
       <div class="row">
         <label class="label">Driver<select id="linkDriver" class="input"></select></label>
-        <label class="label">Existing Supabase User ID<input id="linkAuthUserId" class="input" type="text" placeholder="Paste the existing Auth User ID"></label>
+        <label class="label">Existing Sirski Member Login<select id="linkMemberLogin" class="input"></select></label>
       </div>
+      <div class="notice"><b>No Supabase User ID is required.</b> Select the member's existing <b>@sirski-transport.com</b> login. The system securely resolves the Supabase Auth user ID in the backend.</div>
       <div class="actions">
         <button id="linkMember" class="btn">LINK EXISTING MEMBER LOGIN</button>
-        <button id="refreshLinkDrivers" class="btn secondary">REFRESH DRIVERS</button>
+        <button id="refreshLinkDrivers" class="btn secondary">REFRESH DRIVERS &amp; MEMBER LOGINS</button>
       </div>
       <div id="linkStatus" class="status"></div>
     </section>
@@ -304,6 +305,42 @@ async function loadMemberAccounts(){
   $("linkDriver").innerHTML=unlinked.length
     ? unlinked.map(d=>`<option value="${esc(d.id)}">${esc(d.trucksbook_username)} — ${esc(d.display_name||"")}</option>`).join("")
     : '<option value="">All member records are already linked</option>';
+
+  if(adminContext?.permissions?.link_accounts===true || adminContext?.is_master){
+    await loadUnlinkedMemberLogins();
+  }
+}
+
+async function loadUnlinkedMemberLogins(){
+  const select=$("linkMemberLogin");
+  if(!select)return;
+  try{
+    const r=await adminCall("list_unlinked_member_logins");
+    const logins=r.members||[];
+    select.innerHTML=logins.length
+      ? '<option value="">Select an existing Sirski member login</option>'+logins.map(u=>{
+          const label=u.display_name||u.trucksbook_username||u.email||"Sirski member";
+          return `<option value="${esc(u.email)}" data-driver-id="${esc(u.driver_id||"")}">${esc(label)} — ${esc(u.email)}</option>`;
+        }).join("")
+      : '<option value="">No unlinked Sirski member logins found</option>';
+
+    // If an existing Auth account was created for the selected driver,
+    // automatically select that account. This is especially useful after
+    // a previous unlink or when a driver was created before linking.
+    autoSelectMemberLoginForDriver();
+  }catch(e){
+    select.innerHTML='<option value="">Unable to load Sirski member logins</option>';
+    $("linkStatus").textContent=e.message;
+    $("linkStatus").className="status error";
+  }
+}
+
+function autoSelectMemberLoginForDriver(){
+  const driverId=$("linkDriver").value;
+  const select=$("linkMemberLogin");
+  if(!driverId||!select)return;
+  const option=[...select.options].find(o=>o.dataset.driverId===driverId);
+  if(option)select.value=option.value;
 }
 
 async function loadDrivers(){
@@ -634,18 +671,25 @@ $("generatePassword").onclick=()=>{
 };
 $("linkMember").onclick=async()=>{
   const driver_id=$("linkDriver").value;
-  const auth_user_id=$("linkAuthUserId").value.trim();
+  const auth_email=$("linkMemberLogin").value.trim().toLowerCase();
   $("linkStatus").className="status";$("linkStatus").textContent="";
-  if(!driver_id||!auth_user_id){
-    $("linkStatus").textContent="Select a driver and enter the existing Supabase User ID.";
+  if(!driver_id||!auth_email){
+    $("linkStatus").textContent="Select a driver and an existing Sirski member login.";
+    return;
+  }
+  const selectedOption=$("linkMemberLogin").selectedOptions[0];
+  const selectedDriverId=selectedOption?.dataset?.driverId||"";
+  if(selectedDriverId && selectedDriverId!==driver_id){
+    $("linkStatus").textContent="This Sirski member login belongs to a different driver. Select the matching login.";
+    $("linkStatus").className="status error";
     return;
   }
   $("linkMember").disabled=true;
   $("linkStatus").textContent="Linking existing member login...";
   try{
-    const r=await adminCall("link_existing_member",{driver_id,auth_user_id});
+    const r=await adminCall("link_existing_member_by_email",{driver_id,auth_email});
     $("linkStatus").textContent=`Existing member login linked successfully for ${r.trucksbook_username||"member"}.`;
-    $("linkAuthUserId").value="";
+    $("linkMemberLogin").value="";
     await loadMemberAccounts();
   }catch(e){
     $("linkStatus").textContent=e.message;
@@ -654,6 +698,8 @@ $("linkMember").onclick=async()=>{
     $("linkMember").disabled=false;
   }
 };
+
+$("linkDriver").onchange=autoSelectMemberLoginForDriver;
 
 $("refreshLinkDrivers").onclick=()=>loadMemberAccounts().catch(e=>{
   $("linkStatus").textContent=e.message;
