@@ -103,7 +103,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <div class="small">Admin session remains active when returning to the Spinner.</div>
     </div>
 
-    <section id="adminManagementSection" class="card perm-hidden">
+    <section id="adminManagementSection" class="card perm-hidden" data-master-only="true">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <div>
           <h2>🛡️ Admin Management</h2>
@@ -694,32 +694,46 @@ function initializeAdmin(){
   adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
-    adminContext=ctx;
-    $("adminEmailBadge").textContent=ctx.email||"Administrator";
-    $("adminRoleBadge").textContent=(ctx.role||"Custom Admin").toUpperCase();
+
+    // Master Admin is authoritative by authenticated Supabase email.
+    // This prevents the UI from hiding Master-only sections if an older
+    // admin context response/cache does not include is_master correctly.
+    const {data:{session}}=await sb.auth.getSession();
+    const sessionEmail=String(session?.user?.email||"").trim().toLowerCase();
+    const contextEmail=String(ctx?.email||"").trim().toLowerCase();
+    const masterEmail="dustdevils29@gmail.com";
+    const isMaster=(sessionEmail===masterEmail || contextEmail===masterEmail || ctx?.is_master===true);
+
+    adminContext={...(ctx||{}),email:contextEmail||sessionEmail,is_master:isMaster,
+      role:isMaster?"Master Admin":(ctx?.role||"Custom Admin")};
+
+    $("adminEmailBadge").textContent=adminContext.email||"Administrator";
+    $("adminRoleBadge").textContent=(adminContext.role||"Custom Admin").toUpperCase();
     $("loginCard").style.display="none";
     $("panel").style.display="block";
 
-    const p=ctx.permissions||{};
-    $("adminManagementSection").classList.toggle("perm-hidden",!ctx.is_master);
-    $("resetSecondaryAdminSection").style.display=ctx.is_master?"block":"none";
-    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
-    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
-    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!ctx.is_master);
-    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!ctx.is_master);
-    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!ctx.is_master);
-    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!ctx.is_master);
-    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!ctx.is_master);
-    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!ctx.is_master);
-    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!ctx.is_master);
+    const p=adminContext.permissions||{};
 
-    if(ctx.is_master)await loadAdminManagement();
-    if(p.add_new_members===true||ctx.is_master)await loadPendingDrivers();
-    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)await loadMemberAccounts();
-    if(p.driver_accounts===true||ctx.is_master)await loadDrivers();
-    if(p.member_gallery===true||ctx.is_master)await loadAdminGallery();
-    if(p.demo_visitors===true||ctx.is_master)await loadDemoVisitors();
-    if(p.sponsor_slots===true||ctx.is_master)await loadSponsorSlots();
+    // Master Admin always sees these sections.
+    $("adminManagementSection").classList.toggle("perm-hidden",!isMaster);
+    $("resetSecondaryAdminSection").style.display=isMaster?"block":"none";
+    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!isMaster);
+    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!isMaster);
+    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!isMaster);
+    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!isMaster);
+    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!isMaster);
+    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!isMaster);
+    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!isMaster);
+    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!isMaster);
+    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!isMaster);
+
+    if(isMaster)await loadAdminManagement();
+    if(p.add_new_members===true||isMaster)await loadPendingDrivers();
+    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||isMaster)await loadMemberAccounts();
+    if(p.driver_accounts===true||isMaster)await loadDrivers();
+    if(p.member_gallery===true||isMaster)await loadAdminGallery();
+    if(p.demo_visitors===true||isMaster)await loadDemoVisitors();
+    if(p.sponsor_slots===true||isMaster)await loadSponsorSlots();
     setManagedAdminForm(null);
   }catch(e){
     adminContext=null;
