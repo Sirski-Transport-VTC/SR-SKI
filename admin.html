@@ -48,8 +48,35 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 @media(max-width:750px){.admin-form-grid,.admin-permissions{grid-template-columns:1fr}}
 </style>
 
+
+<style>
+#adminTempModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;align-items:center;justify-content:center;padding:20px}
+#adminTempModal.show{display:flex}
+.admin-temp-card{width:min(520px,100%);background:#111722;border:1px solid #344054;border-radius:18px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.admin-temp-card h3{margin:0 0 8px;color:#f2c300}
+.admin-temp-row{margin-top:14px;padding:12px;border-radius:10px;background:#0a0f17;border:1px solid #273142}
+.admin-temp-label{font-size:11px;color:#9ca9bb;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.admin-temp-value{margin-top:5px;font-weight:800;word-break:break-all}
+.admin-temp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+</style>
+
 </head>
 <body>
+
+<div id="adminTempModal" role="dialog" aria-modal="true" aria-labelledby="adminTempTitle">
+  <div class="admin-temp-card">
+    <h3 id="adminTempTitle">Administrator Added Successfully</h3>
+    <div class="small">Give these credentials to the new administrator securely. They should change the temporary password after signing in.</div>
+    <div class="admin-temp-row"><div class="admin-temp-label">Administrator Email</div><div id="adminTempEmail" class="admin-temp-value"></div></div>
+    <div class="admin-temp-row"><div class="admin-temp-label">Temporary Password</div><div id="adminTempPassword" class="admin-temp-value"></div></div>
+    <div class="admin-temp-actions">
+      <button id="copyAdminTempPassword" class="btn secondary" type="button">COPY PASSWORD</button>
+      <button id="copyAdminCredentials" class="btn secondary" type="button">COPY CREDENTIALS</button>
+      <button id="closeAdminTempModal" class="btn" type="button">CLOSE</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="top">
     <div class="brand"><img class="logo" src="./sirski-logo.png" alt="Sirski Transport"><div><h1>SIRSKI MEMBER ADMIN</h1><p>Create and manage individual Sirski Transport member logins.</p></div></div>
@@ -511,6 +538,23 @@ async function loadAdminManagement(){
   }
 }
 
+
+function showAdminTempPassword(email,password){
+  $("adminTempEmail").textContent=email||"";
+  $("adminTempPassword").textContent=password||"";
+  $("adminTempModal").classList.add("show");
+}
+$("closeAdminTempModal").onclick=()=>$("adminTempModal").classList.remove("show");
+$("adminTempModal").onclick=e=>{if(e.target===$("adminTempModal"))$("adminTempModal").classList.remove("show")};
+$("copyAdminTempPassword").onclick=async()=>{
+  const password=$("adminTempPassword").textContent;if(!password)return;
+  try{await navigator.clipboard.writeText(password);$("copyAdminTempPassword").textContent="COPIED";setTimeout(()=>{$("copyAdminTempPassword").textContent="COPY PASSWORD"},1200)}catch(_){}
+};
+$("copyAdminCredentials").onclick=async()=>{
+  const email=$("adminTempEmail").textContent,password=$("adminTempPassword").textContent;if(!email||!password)return;
+  try{await navigator.clipboard.writeText(`Sirski Transport Admin\nEmail: ${email}\nTemporary Password: ${password}`);$("copyAdminCredentials").textContent="COPIED";setTimeout(()=>{$("copyAdminCredentials").textContent="COPY CREDENTIALS"},1200)}catch(_){}
+};
+
 $("saveManagedAdmin").onclick=async()=>{
   const button=$("saveManagedAdmin");
   const status=$("adminManagementStatus");
@@ -547,14 +591,9 @@ $("saveManagedAdmin").onclick=async()=>{
     }else{
       result=await adminCall("add_admin",{email,role,permissions});
       if(result?.success!==true) throw new Error(result?.error||"The administrator could not be added.");
-      if(result.invited){
-        formStatus.textContent=`${email} was added successfully. An invitation was sent.`;
-      }else if(result.invite_error){
-        formStatus.textContent=`${email} was added successfully, but the invitation was not sent: ${result.invite_error}`;
-      }else{
-        formStatus.textContent=`${email} was added successfully.`;
-      }
-    }
+      formStatus.textContent=`${email} was added successfully.`;
+       if(result.temporary_password) showAdminTempPassword(email,result.temporary_password);
+       }
     await loadAdminManagement();
     setManagedAdminForm(null);
     formStatus.textContent=editingAdminId?`${email} updated successfully.`:`${email} was added successfully.`;
