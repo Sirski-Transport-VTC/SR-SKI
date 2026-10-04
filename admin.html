@@ -687,47 +687,53 @@ $("saveManagedAdmin").onclick=async()=>{
   }
 };
 
-function isMasterAdminContext(ctx=adminContext){return ctx?.is_master===true || ctx?.role==="Master Admin";}
+function isMasterAdminContext(ctx=adminContext){
+  const email=String(ctx?.email||"").trim().toLowerCase();
+  const role=String(ctx?.role||"").trim().toLowerCase();
+  return ctx?.is_master===true || role==="master admin" || email==="dustdevils29@gmail.com";
+}
 
 function initializeAdmin(){
   if(adminInitPromise) return adminInitPromise;
   adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
-    adminContext=ctx;
-    adminContext.is_master=isMasterAdminContext(ctx);
+    adminContext=ctx||{};
+    adminContext.email=String(adminContext.email||"").trim().toLowerCase();
+    adminContext.is_master=isMasterAdminContext(adminContext);
     $("adminEmailBadge").textContent=ctx.email||"Administrator";
     $("adminRoleBadge").textContent=(ctx.role||"Custom Admin").toUpperCase();
     $("loginCard").style.display="none";
     $("panel").style.display="block";
 
-    const p=ctx.permissions||{};
-    $("adminManagementSection").classList.toggle("perm-hidden",!ctx.is_master);
-    $("resetSecondaryAdminSection").style.display=ctx.is_master?"block":"none";
-    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
-    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
-    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!ctx.is_master);
-    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!ctx.is_master);
-    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!ctx.is_master);
-    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!ctx.is_master);
-    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!ctx.is_master);
-    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!ctx.is_master);
-    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!ctx.is_master);
+    const p=adminContext.permissions||{};
+    const master=adminContext.is_master===true;
+    $("adminManagementSection").classList.toggle("perm-hidden",!master);
+    $("resetSecondaryAdminSection").style.display=master?"block":"none";
+    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!master);
+    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!master);
+    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!master);
+    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!master);
+    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!master);
+    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!master);
+    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!master);
+    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!master);
+    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!master);
 
     setManagedAdminForm(null);
 
     // Start every visible dashboard loader independently so one slow section
     // cannot block the other sections from loading automatically.
     const loaders=[];
-    if(ctx.is_master)loaders.push(loadAdminManagement());
-    if(p.add_new_members===true||ctx.is_master)loaders.push(loadPendingDrivers());
-    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)loaders.push(loadMemberAccounts());
-    if(p.driver_accounts===true||ctx.is_master)loaders.push(loadDrivers());
-    if(p.demo_visitors===true||ctx.is_master)loaders.push(loadDemoVisitors());
-    if(p.sponsor_slots===true||ctx.is_master)loaders.push(loadSponsorSlots());
+    if(master)loaders.push(loadAdminManagement());
+    if(p.add_new_members===true||master)loaders.push(loadPendingDrivers());
+    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||master)loaders.push(loadMemberAccounts());
+    if(p.driver_accounts===true||master)loaders.push(loadDrivers());
+    if(p.demo_visitors===true||master)loaders.push(loadDemoVisitors());
+    if(p.sponsor_slots===true||master)loaders.push(loadSponsorSlots());
     // Gallery is started independently as well; Promise.allSettled below
     // prevents any individual loader failure from stopping initialization.
-    if(p.member_gallery===true||ctx.is_master)loaders.push(loadAdminGallery());
+    if(p.member_gallery===true||master)loaders.push(loadAdminGallery());
     await Promise.allSettled(loaders);
   }catch(e){
     adminContext=null;
