@@ -153,6 +153,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
           <label class="permission-box"><input type="checkbox" data-permission="sponsor_slots"> Sponsor Slots</label>
           <label class="permission-box"><input type="checkbox" data-permission="member_gallery"> Member Gallery</label>
           <label class="permission-box"><input type="checkbox" data-permission="member_accounts"> Member Accounts</label>
+          <label class="permission-box"><input type="checkbox" data-permission="add_new_members"> Add New Members</label>
           <label class="permission-box"><input type="checkbox" data-permission="driver_accounts"> Driver Accounts</label>
           <label class="permission-box"><input type="checkbox" data-permission="demo_visitors"> Demo Visitors</label>
           <label class="permission-box"><input type="checkbox" data-permission="password_reset"> Reset Member Passwords</label>
@@ -200,6 +201,27 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       </div>
       <div class="actions"><button id="changeOwnPassword" class="btn">CHANGE MY PASSWORD</button></div>
       <div id="ownPasswordStatus" class="status"></div>
+    </section>
+
+    <section id="addNewMemberSection" class="card">
+      <h2>➕ Add New Member</h2>
+      <p class="small">Create a Sirski member login now. The member can be linked to a TrucksBook driver later from this admin page after the Master Admin adds that driver on the Spinner page.</p>
+      <div class="row">
+        <label class="label">Sirski Username<input id="newMemberUsername" class="input" type="text" autocomplete="off" placeholder="Example: wildfire29"></label>
+        <label class="label">Sirski Email
+          <div style="display:flex;gap:8px">
+            <input id="newMemberEmail" class="input" type="email" readonly placeholder="username@sirski-transport.com" style="margin-top:7px">
+            <button id="copyNewMemberEmail" type="button" class="btn secondary" style="margin-top:7px;white-space:nowrap">COPY</button>
+          </div>
+        </label>
+      </div>
+      <div class="row">
+        <label class="label">Temporary Password<input id="newMemberPassword" class="input" type="password" placeholder="At least 6 characters"></label>
+        <label class="label">Display Name<input id="newMemberDisplay" class="input" type="text" placeholder="Member's display name"></label>
+      </div>
+      <div class="notice"><b>Important:</b> this creates the Sirski login only. The member's TrucksBook driver is added later by the Master Admin on the Spinner page, then an authorized admin can link the existing Sirski login.</div>
+      <div class="actions"><button id="addNewMember" class="btn">ADD NEW MEMBER</button><button id="generateNewMemberPassword" class="btn secondary" type="button">GENERATE PASSWORD</button></div>
+      <div id="addNewMemberStatus" class="status"></div>
     </section>
 
     <section id="memberAccountsSection" class="card">
@@ -423,6 +445,7 @@ const permissionLabels={
   sponsor_slots:"Sponsor Slots",
   member_gallery:"Member Gallery",
   member_accounts:"Member Accounts",
+  add_new_members:"Add New Members",
   driver_accounts:"Driver Accounts",
   demo_visitors:"Demo Visitors",
   password_reset:"Reset Member Passwords",
@@ -668,6 +691,7 @@ function initializeAdmin(){
     const p=ctx.permissions||{};
     $("adminManagementSection").classList.toggle("perm-hidden",!ctx.is_master);
     $("resetSecondaryAdminSection").style.display=ctx.is_master?"block":"none";
+    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
     $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!ctx.is_master);
     $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!ctx.is_master);
     $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!ctx.is_master);
@@ -735,6 +759,41 @@ $("changeOwnPassword").onclick=async()=>{
     status.className="status error";
     status.textContent=e.message||"Unable to change your password.";
   }finally{button.disabled=false}
+};
+
+function updateNewMemberEmail(){
+  const raw=$("newMemberUsername").value.trim().toLowerCase();
+  const clean=raw.replace(/[^a-z0-9._-]/g,"");
+  $("newMemberEmail").value=clean?`${clean}@sirski-transport.com`:"";
+}
+$("newMemberUsername").oninput=updateNewMemberEmail;
+$("copyNewMemberEmail").onclick=async()=>{
+  const email=$("newMemberEmail").value;
+  if(!email)return;
+  try{await navigator.clipboard.writeText(email);$("addNewMemberStatus").textContent="Sirski email copied: "+email;}catch(_){$("addNewMemberStatus").textContent="Email: "+email;}
+};
+$("generateNewMemberPassword").onclick=()=>{
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let p="";
+  crypto.getRandomValues(new Uint32Array(12)).forEach(n=>p+=chars[n%chars.length]);
+  $("newMemberPassword").value=p;
+  $("addNewMemberStatus").className="status";
+  $("addNewMemberStatus").textContent="Temporary password generated. Give it to the member securely.";
+};
+$("addNewMember").onclick=async()=>{
+  const username=$("newMemberUsername").value.trim().toLowerCase();
+  const password=$("newMemberPassword").value;
+  const display_name=$("newMemberDisplay").value.trim();
+  $("addNewMemberStatus").className="status";$("addNewMemberStatus").textContent="";
+  if(!username||!password||!display_name){$("addNewMemberStatus").textContent="Username, password, and display name are required.";return}
+  if(password.length<6){$("addNewMemberStatus").textContent="Password must be at least 6 characters.";return}
+  $("addNewMember").disabled=true;$("addNewMemberStatus").textContent="Creating new member account...";
+  try{
+    const r=await adminCall("add_new_member",{username,password,display_name});
+    $("addNewMemberStatus").textContent=`New Sirski member created: ${r.email}. The account is ready to be linked later.`;
+    $("newMemberUsername").value=$("newMemberEmail").value=$("newMemberPassword").value=$("newMemberDisplay").value="";
+  }catch(e){$("addNewMemberStatus").textContent=e.message;$("addNewMemberStatus").className="status error";}
+  finally{$("addNewMember").disabled=false}
 };
 
 $("create").onclick=async()=>{
