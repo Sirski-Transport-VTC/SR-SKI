@@ -546,13 +546,46 @@ function showAdminTempPassword(email,password){
 }
 $("closeAdminTempModal").onclick=()=>$("adminTempModal").classList.remove("show");
 $("adminTempModal").onclick=e=>{if(e.target===$("adminTempModal"))$("adminTempModal").classList.remove("show")};
+async function copyTextReliable(text){
+  if(!text)return false;
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(_){ }
+  try{
+    const ta=document.createElement("textarea");
+    ta.value=text;
+    ta.setAttribute("readonly","");
+    ta.style.position="fixed";
+    ta.style.left="-9999px";
+    ta.style.top="0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  }catch(_){return false;}
+}
 $("copyAdminTempPassword").onclick=async()=>{
-  const password=$("adminTempPassword").textContent;if(!password)return;
-  try{await navigator.clipboard.writeText(password);$("copyAdminTempPassword").textContent="COPIED";setTimeout(()=>{$("copyAdminTempPassword").textContent="COPY PASSWORD"},1200)}catch(_){}
+  const button=$("copyAdminTempPassword");
+  const password=$("adminTempPassword").textContent;
+  if(!password)return;
+  const ok=await copyTextReliable(password);
+  button.textContent=ok?"COPIED":"COPY FAILED";
+  setTimeout(()=>{button.textContent="COPY PASSWORD"},1500);
 };
 $("copyAdminCredentials").onclick=async()=>{
-  const email=$("adminTempEmail").textContent,password=$("adminTempPassword").textContent;if(!email||!password)return;
-  try{await navigator.clipboard.writeText(`Sirski Transport Admin\nEmail: ${email}\nTemporary Password: ${password}`);$("copyAdminCredentials").textContent="COPIED";setTimeout(()=>{$("copyAdminCredentials").textContent="COPY CREDENTIALS"},1200)}catch(_){}
+  const button=$("copyAdminCredentials");
+  const email=$("adminTempEmail").textContent;
+  const password=$("adminTempPassword").textContent;
+  if(!email||!password)return;
+  const ok=await copyTextReliable(`Sirski Transport Admin\nEmail: ${email}\nTemporary Password: ${password}`);
+  button.textContent=ok?"COPIED":"COPY FAILED";
+  setTimeout(()=>{button.textContent="COPY CREDENTIALS"},1500);
 };
 
 $("saveManagedAdmin").onclick=async()=>{
