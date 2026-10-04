@@ -815,6 +815,74 @@ $("changeOwnPassword").onclick=async()=>{
   }finally{button.disabled=false}
 };
 
+
+function renderPendingDrivers(){
+  const table=$("pendingDriversTable");
+  if(!table)return;
+  if(!pendingDrivers.length){
+    table.innerHTML='<div class="small" style="margin-top:10px">No drivers are currently awaiting TrucksBook.</div>';
+    return;
+  }
+
+  const canDelete=adminContext?.is_master===true ||
+    String(adminContext?.role||"").trim().toLowerCase()==="master admin";
+
+  table.innerHTML='<div style="overflow:auto;margin-top:10px"><table class="table"><tr><th>Name</th><th>Note</th><th>Added By</th><th>Date / Time</th><th>Actions</th></tr>'+
+    pendingDrivers.map(row=>{
+      const action=canDelete
+        ? `<button class="admin-mini-btn danger" type="button" data-delete-pending="${esc(row.id)}">DELETE</button>`
+        : '<span class="small">—</span>';
+      return `<tr><td><b>${esc(row.display_name||"")}</b></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
+    }).join("")+
+    '</table></div>';
+
+  if(canDelete){
+    table.querySelectorAll("[data-delete-pending]").forEach(btn=>{
+      btn.onclick=async()=>{
+        const id=btn.dataset.deletePending;
+        if(!id||!confirm("Delete this pending driver?"))return;
+        btn.disabled=true;
+        btn.textContent="DELETING...";
+        try{
+          await adminCall("delete_pending_driver",{id});
+          $("pendingDriversStatus").className="status";
+          $("pendingDriversStatus").textContent="Pending driver deleted.";
+          await loadPendingDrivers();
+        }catch(e){
+          btn.disabled=false;
+          btn.textContent="DELETE";
+          $("pendingDriversStatus").className="status error";
+          $("pendingDriversStatus").textContent=e.message||"Unable to delete pending driver.";
+        }
+      };
+    });
+  }
+}
+
+async function loadPendingDrivers(){
+  const status=$("pendingDriversStatus");
+  const table=$("pendingDriversTable");
+  if(!status||!table)return;
+
+  status.className="status";
+  status.textContent="Loading awaiting TrucksBook list...";
+
+  try{
+    const r=await adminCall("list_pending_drivers");
+    pendingDrivers=r.pending_drivers||[];
+    renderPendingDrivers();
+    status.textContent=pendingDrivers.length
+      ? `${pendingDrivers.length} driver${pendingDrivers.length===1?"":"s"} awaiting TrucksBook.`
+      : "No drivers are currently awaiting TrucksBook.";
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to load awaiting TrucksBook list.";
+    table.innerHTML="";
+  }
+}
+
+$("pendingDriversRefresh").onclick=()=>loadPendingDrivers();
+
 function updateNewMemberEmail(){
   const raw=$("newMemberUsername").value.trim().toLowerCase();
   const clean=raw.replace(/[^a-z0-9._-]/g,"");
