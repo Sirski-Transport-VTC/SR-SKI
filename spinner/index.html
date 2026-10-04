@@ -375,6 +375,56 @@ $("createMember").onclick=async()=>{if(!hasPermission('member_accounts')){adminS
 $("generateResetPassword").onclick=()=>{$('resetPassword').value=randomPassword();adminStatus('resetStatus','Temporary password generated. Give it to the member securely.')};
 $("resetMember").onclick=async()=>{if(!hasPermission('password_reset')){adminStatus('resetStatus','Permission required: Reset Member Passwords.',true);return}const driver_id=$('resetDriver').value,new_password=$('resetPassword').value;if(!driver_id||!new_password){adminStatus('resetStatus','Select a linked member and enter a temporary password.',true);return}if(new_password.length<6){adminStatus('resetStatus','Temporary password must be at least 6 characters.',true);return}try{$('resetMember').disabled=true;adminStatus('resetStatus','Resetting password...');const r=await adminCall('reset_member_password',{driver_id,new_password});adminStatus('resetStatus',`Password reset successfully for ${r.trucksbook_username||'member'}.`);$('resetPassword').value=''}catch(e){adminStatus('resetStatus',e.message,true)}finally{$('resetMember').disabled=false}};
 $("unlinkMember").onclick=async()=>{if(!hasPermission('member_accounts')){adminStatus('unlinkStatus','Permission required: Member Accounts.',true);return}const driver_id=$('unlinkDriver').value;if(!driver_id){adminStatus('unlinkStatus','Select a linked member first.',true);return}const d=adminDrivers.find(x=>x.id===driver_id);if(!confirm(`Unlink the Sirski member login for ${d?.trucksbook_username||'this driver'}? The driver, points, and Spinner history will remain.`))return;try{$('unlinkMember').disabled=true;adminStatus('unlinkStatus','Unlinking member login...');await adminCall('unlink_member_login',{driver_id});adminStatus('unlinkStatus','Member login unlinked. The driver and Spinner data were kept.');await loadAdmin()}catch(e){adminStatus('unlinkStatus',e.message,true)}finally{$('unlinkMember').disabled=false}};
+
+async function toggleDriver(driverId, newActive){
+  if(!hasPermission('driver_accounts')){
+    adminStatus('adminStatus','Permission required: Driver Accounts.',true);
+    return;
+  }
+
+  const driver = adminDrivers.find(x => x.id === driverId);
+  const name = driver?.trucksbook_username || 'this driver';
+  const actionText = newActive ? 'enable' : 'disable';
+
+  if(!confirm(`Are you sure you want to ${actionText} ${name}?`)) return;
+
+  try{
+    adminStatus('adminStatus', `${newActive ? 'Enabling' : 'Disabling'} ${name}...`);
+    await adminCall('set_active', {driver_id: driverId, active: newActive});
+    adminStatus('adminStatus', `${name} has been ${newActive ? 'enabled' : 'disabled'} successfully.`);
+    await loadAdmin();
+  }catch(e){
+    adminStatus('adminStatus', e.message || `Unable to ${actionText} driver.`, true);
+  }
+}
+
+async function redeemDriver(driverId){
+  if(!hasPermission('driver_accounts')){
+    adminStatus('adminStatus','Permission required: Driver Accounts.',true);
+    return;
+  }
+
+  const driver = adminDrivers.find(x => x.id === driverId);
+  const name = driver?.trucksbook_username || 'this driver';
+  const points = Number(driver?.points_balance || 0);
+
+  if(points < 20){
+    adminStatus('adminStatus', `${name} does not have 20 points available for redemption.`, true);
+    return;
+  }
+
+  if(!confirm(`Redeem 20 points for ${name}? This will process the member's 20-point reward.`)) return;
+
+  try{
+    adminStatus('adminStatus', `Redeeming 20 points for ${name}...`);
+    await adminCall('redeem_points', {driver_id: driverId});
+    adminStatus('adminStatus', `20 points redeemed successfully for ${name}.`);
+    await loadAdmin();
+  }catch(e){
+    adminStatus('adminStatus', e.message || 'Unable to redeem points.', true);
+  }
+}
+
 $("refreshAdmin").onclick=()=>loadAdmin();
 $("sponsorRefresh").onclick=()=>loadSponsorSlots();
 $("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
