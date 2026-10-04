@@ -168,6 +168,29 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       </div>
     </section>
 
+    <section id="resetSecondaryAdminSection" class="card" style="display:none">
+      <h2>🔑 Reset Secondary Admin Password</h2>
+      <p class="small">Select an existing secondary administrator, generate a new temporary password, then copy the credentials and send them securely to that administrator.</p>
+      <div class="row">
+        <label class="label">Secondary Administrator
+          <select id="resetSecondaryAdmin" class="admin-role-select"></select>
+        </label>
+        <div></div>
+      </div>
+      <div class="actions"><button id="resetSecondaryAdminBtn" class="btn" type="button">RESET PASSWORD</button></div>
+      <div id="resetSecondaryAdminStatus" class="status"></div>
+      <div id="resetSecondaryAdminResult" style="display:none;margin-top:16px;padding:16px;border:1px solid #344054;border-radius:14px;background:#0a0f17">
+        <div class="admin-temp-label">Administrator Email</div>
+        <div id="resetSecondaryAdminEmail" class="admin-temp-value"></div>
+        <div class="admin-temp-label" style="margin-top:14px">Temporary Password</div>
+        <div id="resetSecondaryAdminPassword" class="admin-temp-value"></div>
+        <div class="admin-temp-actions">
+          <button id="copyResetAdminPassword" class="btn secondary" type="button">COPY PASSWORD</button>
+          <button id="copyResetAdminCredentials" class="btn secondary" type="button">COPY CREDENTIALS</button>
+        </div>
+      </div>
+    </section>
+
     <section id="changeOwnPasswordSection" class="card">
       <h2>🔐 Change My Admin Password</h2>
       <p class="small">Change the password for the administrator account currently signed in. This does not change any member account passwords.</p>
@@ -449,6 +472,31 @@ $("cancelManagedAdmin").onclick=()=>{
   $("adminManagementStatus").textContent="";
 };
 
+function generateSecureTempPassword(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let temp=""; const values=new Uint32Array(12); crypto.getRandomValues(values);
+  values.forEach(n=>temp+=chars[n%chars.length]); return temp;
+}
+async function copyTextReliable(text){
+  if(!text)return false;
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch(_){ }
+  try{const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,ta.value.length);const ok=document.execCommand("copy");ta.remove();return ok;}catch(_){return false;}
+}
+function showResetSecondaryAdminResult(email,password){
+  $("resetSecondaryAdminEmail").textContent=email||"";
+  $("resetSecondaryAdminPassword").textContent=password||"";
+  $("resetSecondaryAdminResult").style.display="block";
+}
+async function resetSelectedSecondaryAdmin(){
+  const select=$("resetSecondaryAdmin"),status=$("resetSecondaryAdminStatus"),result=$("resetSecondaryAdminResult");
+  const id=select?.value||"",email=select?.selectedOptions?.[0]?.dataset?.email||"";
+  if(!id||!email){status.className="status error";status.textContent="Select a secondary administrator first.";return;}
+  const password=generateSecureTempPassword(),button=$("resetSecondaryAdminBtn");
+  button.disabled=true;button.textContent="RESETTING...";status.className="status";status.textContent="Resetting secondary administrator password...";result.style.display="none";
+  try{await adminCall("reset_admin_password",{id,new_password:password});showResetSecondaryAdminResult(email,password);status.textContent=`Password reset successfully for ${email}. Copy the temporary credentials and send them securely.`;}
+  catch(e){status.className="status error";status.textContent=e.message||"Unable to reset administrator password.";}
+  finally{button.disabled=false;button.textContent="RESET PASSWORD";}
+}
 async function loadAdminManagement(){
   if(!adminContext?.is_master)return;
   const status=$("adminManagementStatus");
@@ -459,6 +507,8 @@ async function loadAdminManagement(){
   try{
     const r=await adminCall("list_admins");
     const rows=r.admins||[];
+    const resetSelect=$("resetSecondaryAdmin");
+    if(resetSelect){resetSelect.innerHTML=rows.length?rows.map(a=>`<option value="${esc(a.id)}" data-email="${esc(a.email)}">${esc(a.email)} — ${esc(a.role||"Custom Admin")}</option>`).join(""): '<option value="">No secondary administrators configured</option>';} 
     const masterRow=`<tr>
       <td><b>${esc("dustdevils29@gmail.com")}</b></td>
       <td><span class="pill">Master Admin</span></td>
@@ -489,27 +539,9 @@ async function loadAdminManagement(){
       };
     });
     body.querySelectorAll("[data-reset-admin]").forEach(btn=>{
-      btn.onclick=async()=>{
-        const admin=rows.find(a=>a.id===btn.dataset.resetAdmin);
-        if(!admin)return;
-        const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-        let temp="";
-        const values=new Uint32Array(12);
-        crypto.getRandomValues(values);
-        values.forEach(n=>temp+=chars[n%chars.length]);
-        if(!confirm(`Reset the password for ${admin.email}?\n\nTemporary password: ${temp}\n\nGive this temporary password to the administrator securely. Continue?`))return;
-        btn.disabled=true;
-        btn.textContent="RESETTING...";
-        try{
-          const r=await adminCall("reset_admin_password",{id:admin.id,new_password:temp});
-          status.className="status";
-          status.textContent=`${admin.email} password reset successfully. Temporary password: ${r.temporary_password||temp}`;
-        }catch(e){
-          btn.disabled=false;
-          btn.textContent="RESET PASSWORD";
-          status.className="status error";
-          status.textContent=e.message||"Unable to reset administrator password.";
-        }
+      btn.onclick=()=>{
+        const select=$("resetSecondaryAdmin");
+        if(select){select.value=btn.dataset.resetAdmin||"";$("resetSecondaryAdminResult").style.display="none";$("resetSecondaryAdminStatus").textContent="";$("resetSecondaryAdminSection").scrollIntoView({behavior:"smooth",block:"start"});}
       };
     });
 
@@ -546,46 +578,13 @@ function showAdminTempPassword(email,password){
 }
 $("closeAdminTempModal").onclick=()=>$("adminTempModal").classList.remove("show");
 $("adminTempModal").onclick=e=>{if(e.target===$("adminTempModal"))$("adminTempModal").classList.remove("show")};
-async function copyTextReliable(text){
-  if(!text)return false;
-  try{
-    if(navigator.clipboard && window.isSecureContext){
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  }catch(_){ }
-  try{
-    const ta=document.createElement("textarea");
-    ta.value=text;
-    ta.setAttribute("readonly","");
-    ta.style.position="fixed";
-    ta.style.left="-9999px";
-    ta.style.top="0";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    ta.setSelectionRange(0,ta.value.length);
-    const ok=document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  }catch(_){return false;}
-}
 $("copyAdminTempPassword").onclick=async()=>{
-  const button=$("copyAdminTempPassword");
-  const password=$("adminTempPassword").textContent;
-  if(!password)return;
-  const ok=await copyTextReliable(password);
-  button.textContent=ok?"COPIED":"COPY FAILED";
-  setTimeout(()=>{button.textContent="COPY PASSWORD"},1500);
+  const password=$("adminTempPassword").textContent;if(!password)return;
+  if(await copyTextReliable(password)){$("copyAdminTempPassword").textContent="COPIED";setTimeout(()=>$("copyAdminTempPassword").textContent="COPY PASSWORD",1200)}else{$("copyAdminTempPassword").textContent="COPY FAILED";setTimeout(()=>$("copyAdminTempPassword").textContent="COPY PASSWORD",1600)}
 };
 $("copyAdminCredentials").onclick=async()=>{
-  const button=$("copyAdminCredentials");
-  const email=$("adminTempEmail").textContent;
-  const password=$("adminTempPassword").textContent;
-  if(!email||!password)return;
-  const ok=await copyTextReliable(`Sirski Transport Admin\nEmail: ${email}\nTemporary Password: ${password}`);
-  button.textContent=ok?"COPIED":"COPY FAILED";
-  setTimeout(()=>{button.textContent="COPY CREDENTIALS"},1500);
+  const email=$("adminTempEmail").textContent,password=$("adminTempPassword").textContent;if(!email||!password)return;
+  if(await copyTextReliable(`Sirski Transport Admin\nEmail: ${email}\nTemporary Password: ${password}`)){$("copyAdminCredentials").textContent="COPIED";setTimeout(()=>$("copyAdminCredentials").textContent="COPY CREDENTIALS",1200)}else{$("copyAdminCredentials").textContent="COPY FAILED";setTimeout(()=>$("copyAdminCredentials").textContent="COPY CREDENTIALS",1600)}
 };
 
 $("saveManagedAdmin").onclick=async()=>{
@@ -656,6 +655,7 @@ function initializeAdmin(){
 
     const p=ctx.permissions||{};
     $("adminManagementSection").classList.toggle("perm-hidden",!ctx.is_master);
+    $("resetSecondaryAdminSection").style.display=ctx.is_master?"block":"none";
     $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!ctx.is_master);
     $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!ctx.is_master);
     $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!ctx.is_master);
@@ -682,6 +682,12 @@ function initializeAdmin(){
   })();
   return adminInitPromise;
 }
+
+$("resetSecondaryAdminBtn").onclick=resetSelectedSecondaryAdmin;
+$("copyResetAdminPassword").onclick=async()=>{const btn=$("copyResetAdminPassword");if(await copyTextReliable($("resetSecondaryAdminPassword").textContent)){btn.textContent="COPIED";setTimeout(()=>btn.textContent="COPY PASSWORD",1200);}else{btn.textContent="COPY FAILED";setTimeout(()=>btn.textContent="COPY PASSWORD",1600);}};
+$("copyResetAdminCredentials").onclick=async()=>{const btn=$("copyResetAdminCredentials"),email=$("resetSecondaryAdminEmail").textContent,password=$("resetSecondaryAdminPassword").textContent;if(await copyTextReliable(`Sirski Transport Admin
+Email: ${email}
+Temporary Password: ${password}`)){btn.textContent="COPIED";setTimeout(()=>btn.textContent="COPY CREDENTIALS",1200);}else{btn.textContent="COPY FAILED";setTimeout(()=>btn.textContent="COPY CREDENTIALS",1600);}};
 
 $("loginBtn").onclick=async()=>{
   $("loginStatus").className="status";
