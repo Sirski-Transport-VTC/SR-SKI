@@ -222,15 +222,17 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <label class="permission-box" style="margin-top:14px"><input id="newMemberAwaitingTrucksBook" type="checkbox" checked> Add this member to <b>New Drivers / Awaiting TrucksBook</b></label>
       <label class="label">Awaiting TrucksBook Note (Optional)<input id="newMemberAwaitingNote" class="input" type="text" maxlength="250" placeholder="e.g. Waiting for TrucksBook registration"></label>
       <div class="notice"><b>Important:</b> this creates the Sirski login now. If the awaiting option is selected, the member is also added to the shared New Drivers / Awaiting TrucksBook list. The Master Admin can later add the actual TrucksBook driver from the Spinner page, then an authorized admin can link the existing Sirski login.</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px">
-        <div><b>🕐 New Drivers / Awaiting TrucksBook</b><div class="small">Members added above can appear here while waiting for their actual TrucksBook driver registration.</div></div>
-        <button id="pendingDriversRefresh" class="btn secondary" type="button">REFRESH</button>
-      </div>
       <div class="actions"><button id="addNewMember" class="btn">ADD NEW MEMBER</button><button id="generateNewMemberPassword" class="btn secondary" type="button">GENERATE PASSWORD</button></div>
       <div id="addNewMemberStatus" class="status"></div>
+    </section>
+
+    <section id="pendingDriversSection" class="card perm-hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div><h2>🕐 New Drivers / Awaiting TrucksBook</h2><p class="small">Members added above can appear here while waiting for their actual TrucksBook driver registration.</p></div>
+        <button id="pendingDriversRefresh" class="btn secondary" type="button">REFRESH</button>
+      </div>
       <div id="pendingDriversStatus" class="status"></div>
       <div id="pendingDriversTable"></div>
-
     </section>
 
     <section id="memberAccountsSection" class="card">
@@ -531,7 +533,7 @@ async function resetSelectedSecondaryAdmin(){
   finally{button.disabled=false;button.textContent="RESET PASSWORD";}
 }
 async function loadAdminManagement(){
-  if(!isMasterAdminContext())return;
+  if(!adminContext?.is_master)return;
   const status=$("adminManagementStatus");
   const body=$("adminTableBody");
   status.className="status";
@@ -624,7 +626,7 @@ $("saveManagedAdmin").onclick=async()=>{
   const button=$("saveManagedAdmin");
   const status=$("adminManagementStatus");
   const formStatus=$("managedAdminSaveStatus");
-  if(!isMasterAdminContext()){
+  if(!adminContext?.is_master){
     formStatus.className="status error";
     formStatus.textContent="Only the Master Admin can add or edit administrators.";
     return;
@@ -687,56 +689,38 @@ $("saveManagedAdmin").onclick=async()=>{
   }
 };
 
-function isMasterAdminContext(ctx=adminContext){
-  const email=String(ctx?.email||"").trim().toLowerCase();
-  const role=String(ctx?.role||"").trim().toLowerCase();
-  return ctx?.is_master===true || role==="master admin" || email==="dustdevils29@gmail.com";
-}
-
 function initializeAdmin(){
   if(adminInitPromise) return adminInitPromise;
   adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
-    const {data:{session}}=await sb.auth.getSession();
-    const sessionEmail=String(session?.user?.email||"").trim().toLowerCase();
-    adminContext=ctx||{};
-    adminContext.email=String(adminContext.email||sessionEmail||"").trim().toLowerCase();
-    adminContext.is_master=isMasterAdminContext(adminContext) || sessionEmail==="dustdevils29@gmail.com";
+    adminContext=ctx;
     $("adminEmailBadge").textContent=ctx.email||"Administrator";
     $("adminRoleBadge").textContent=(ctx.role||"Custom Admin").toUpperCase();
     $("loginCard").style.display="none";
     $("panel").style.display="block";
 
-    const p=adminContext.permissions||{};
-    const master=adminContext.is_master===true;
-    $("adminManagementSection").classList.toggle("perm-hidden",!master);
-    $("resetSecondaryAdminSection").style.display=master?"block":"none";
-    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!master);
-    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!master);
-    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!master);
-    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!master);
-    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!master);
-    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!master);
-    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!master);
-    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!master);
-    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!master);
+    const p=ctx.permissions||{};
+    $("adminManagementSection").classList.toggle("perm-hidden",!ctx.is_master);
+    $("resetSecondaryAdminSection").style.display=ctx.is_master?"block":"none";
+    $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
+    $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!ctx.is_master);
+    $("memberAccountsSection").classList.toggle("perm-hidden",p.member_accounts!==true&&!ctx.is_master);
+    $("linkAccountsSection").classList.toggle("perm-hidden",p.link_accounts!==true&&!ctx.is_master);
+    $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!ctx.is_master);
+    $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!ctx.is_master);
+    $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!ctx.is_master);
+    $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!ctx.is_master);
+    $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!ctx.is_master);
 
+    if(ctx.is_master)await loadAdminManagement();
+    if(p.add_new_members===true||ctx.is_master)await loadPendingDrivers();
+    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)await loadMemberAccounts();
+    if(p.driver_accounts===true||ctx.is_master)await loadDrivers();
+    if(p.member_gallery===true||ctx.is_master)await loadAdminGallery();
+    if(p.demo_visitors===true||ctx.is_master)await loadDemoVisitors();
+    if(p.sponsor_slots===true||ctx.is_master)await loadSponsorSlots();
     setManagedAdminForm(null);
-
-    // Start every visible dashboard loader independently so one slow section
-    // cannot block the other sections from loading automatically.
-    const loaders=[];
-    if(master)loaders.push(loadAdminManagement());
-    if(p.add_new_members===true||master)loaders.push(loadPendingDrivers());
-    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||master)loaders.push(loadMemberAccounts());
-    if(p.driver_accounts===true||master)loaders.push(loadDrivers());
-    if(p.demo_visitors===true||master)loaders.push(loadDemoVisitors());
-    if(p.sponsor_slots===true||master)loaders.push(loadSponsorSlots());
-    // Gallery is started independently as well; Promise.allSettled below
-    // prevents any individual loader failure from stopping initialization.
-    if(p.member_gallery===true||master)loaders.push(loadAdminGallery());
-    await Promise.allSettled(loaders);
   }catch(e){
     adminContext=null;
     $("loginStatus").className="status error";
@@ -790,58 +774,6 @@ $("changeOwnPassword").onclick=async()=>{
     status.textContent=e.message||"Unable to change your password.";
   }finally{button.disabled=false}
 };
-
-function renderPendingDrivers(){
-  const table=$("pendingDriversTable");
-  if(!table)return;
-  if(!pendingDrivers.length){
-    table.innerHTML='<div class="small" style="margin-top:10px">No drivers are currently awaiting TrucksBook.</div>';
-    return;
-  }
-  const canDelete=adminContext?.is_master===true || adminContext?.role==="Master Admin";
-  table.innerHTML='<div style="overflow:auto;margin-top:10px"><table class="table"><tr><th>Name</th><th>Note</th><th>Added By</th><th>Date / Time</th><th>Actions</th></tr>'+pendingDrivers.map(row=>{
-    const action=canDelete?`<button class="admin-mini-btn danger" type="button" data-delete-pending="${esc(row.id)}">DELETE</button>`:'<span class="small">—</span>';
-    return `<tr><td><b>${esc(row.display_name||"")}</b></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
-  }).join('')+'</table></div>';
-  if(canDelete){
-    table.querySelectorAll('[data-delete-pending]').forEach(btn=>{
-      btn.onclick=async()=>{
-        const id=btn.dataset.deletePending;
-        if(!id||!confirm('Delete this pending driver?'))return;
-        btn.disabled=true;btn.textContent='DELETING...';
-        try{
-          await adminCall('delete_pending_driver',{id});
-          $("pendingDriversStatus").className='status';
-          $("pendingDriversStatus").textContent='Pending driver deleted.';
-          await loadPendingDrivers();
-        }catch(e){
-          btn.disabled=false;btn.textContent='DELETE';
-          $("pendingDriversStatus").className='status error';
-          $("pendingDriversStatus").textContent=e.message||'Unable to delete pending driver.';
-        }
-      };
-    });
-  }
-}
-
-async function loadPendingDrivers(){
-  const status=$("pendingDriversStatus"),table=$("pendingDriversTable");
-  if(!status||!table)return;
-  status.className='status';
-  status.textContent='Loading awaiting TrucksBook list...';
-  try{
-    const r=await adminCall('list_pending_drivers');
-    pendingDrivers=r.pending_drivers||[];
-    renderPendingDrivers();
-    status.textContent=pendingDrivers.length?`${pendingDrivers.length} driver${pendingDrivers.length===1?'':'s'} awaiting TrucksBook.`:'No drivers are currently awaiting TrucksBook.';
-  }catch(e){
-    status.className='status error';
-    status.textContent=e.message||'Unable to load awaiting TrucksBook list.';
-    table.innerHTML='';
-  }
-}
-
-$("pendingDriversRefresh").onclick=()=>loadPendingDrivers();
 
 function updateNewMemberEmail(){
   const raw=$("newMemberUsername").value.trim().toLowerCase();
