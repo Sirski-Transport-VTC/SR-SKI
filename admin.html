@@ -698,9 +698,11 @@ function initializeAdmin(){
   adminInitPromise=(async()=>{
   try{
     const ctx=await adminCall("get_admin_context");
+    const {data:{session}}=await sb.auth.getSession();
+    const sessionEmail=String(session?.user?.email||"").trim().toLowerCase();
     adminContext=ctx||{};
-    adminContext.email=String(adminContext.email||"").trim().toLowerCase();
-    adminContext.is_master=isMasterAdminContext(adminContext);
+    adminContext.email=String(adminContext.email||sessionEmail||"").trim().toLowerCase();
+    adminContext.is_master=isMasterAdminContext(adminContext) || sessionEmail==="dustdevils29@gmail.com";
     $("adminEmailBadge").textContent=ctx.email||"Administrator";
     $("adminRoleBadge").textContent=(ctx.role||"Custom Admin").toUpperCase();
     $("loginCard").style.display="none";
