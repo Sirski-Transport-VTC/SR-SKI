@@ -711,14 +711,21 @@ function initializeAdmin(){
     $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!ctx.is_master);
     $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!ctx.is_master);
 
-    if(ctx.is_master)await loadAdminManagement();
-    if(p.add_new_members===true||ctx.is_master)await loadPendingDrivers();
-    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)await loadMemberAccounts();
-    if(p.driver_accounts===true||ctx.is_master)await loadDrivers();
-    if(p.member_gallery===true||ctx.is_master)await loadAdminGallery();
-    if(p.demo_visitors===true||ctx.is_master)await loadDemoVisitors();
-    if(p.sponsor_slots===true||ctx.is_master)await loadSponsorSlots();
     setManagedAdminForm(null);
+
+    // Start every visible dashboard loader independently so one slow section
+    // cannot block the other sections from loading automatically.
+    const loaders=[];
+    if(ctx.is_master)loaders.push(loadAdminManagement());
+    if(p.add_new_members===true||ctx.is_master)loaders.push(loadPendingDrivers());
+    if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||ctx.is_master)loaders.push(loadMemberAccounts());
+    if(p.driver_accounts===true||ctx.is_master)loaders.push(loadDrivers());
+    if(p.demo_visitors===true||ctx.is_master)loaders.push(loadDemoVisitors());
+    if(p.sponsor_slots===true||ctx.is_master)loaders.push(loadSponsorSlots());
+    // Gallery is started independently as well; Promise.allSettled below
+    // prevents any individual loader failure from stopping initialization.
+    if(p.member_gallery===true||ctx.is_master)loaders.push(loadAdminGallery());
+    await Promise.allSettled(loaders);
   }catch(e){
     adminContext=null;
     $("loginStatus").className="status error";
@@ -780,7 +787,7 @@ function renderPendingDrivers(){
     table.innerHTML='<div class="small" style="margin-top:10px">No drivers are currently awaiting TrucksBook.</div>';
     return;
   }
-  const canDelete=adminContext?.is_master===true;
+  const canDelete=adminContext?.is_master===true || adminContext?.role==="Master Admin";
   table.innerHTML='<div style="overflow:auto;margin-top:10px"><table class="table"><tr><th>Name</th><th>Note</th><th>Added By</th><th>Date / Time</th><th>Actions</th></tr>'+pendingDrivers.map(row=>{
     const action=canDelete?`<button class="admin-mini-btn danger" type="button" data-delete-pending="${esc(row.id)}">DELETE</button>`:'<span class="small">—</span>';
     return `<tr><td><b>${esc(row.display_name||"")}</b></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
