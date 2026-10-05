@@ -832,7 +832,10 @@ function renderPendingDrivers(){
       const action=canDelete
         ? `<button class="admin-mini-btn danger" type="button" data-delete-pending="${esc(row.id)}">DELETE</button>`
         : '<span class="small">—</span>';
-      return `<tr><td><b>${esc(row.display_name||"")}</b></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
+      const loginStatus=row.auth_user_id
+        ? '<span class="pill">Sirski login linked</span>'
+        : '<span class="pill neutral">Older record</span>';
+      return `<tr><td><b>${esc(row.display_name||"")}</b><div style="margin-top:5px">${loginStatus}</div></td><td>${esc(row.note||"—")}</td><td>${esc(row.created_by_email||"—")}</td><td>${esc(new Date(row.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
     }).join("")+
     '</table></div>';
 
@@ -914,7 +917,7 @@ $("addNewMember").onclick=async()=>{
   $("addNewMember").disabled=true;$("addNewMemberStatus").textContent="Creating new member account...";
   try{
     const r=await adminCall("add_new_member",{username,password,display_name});
-    if(addAwaiting)await adminCall("add_pending_driver",{display_name,note:awaitingNote});
+    if(addAwaiting)await adminCall("add_pending_driver",{display_name,note:awaitingNote,auth_user_id:r.user_id});
     $("addNewMemberStatus").textContent=addAwaiting?`New Sirski member created: ${r.email} and added to Awaiting TrucksBook.`:`New Sirski member created: ${r.email}. The account is ready to be linked later.`;
     $("newMemberUsername").value=$("newMemberEmail").value=$("newMemberPassword").value=$("newMemberDisplay").value="";
     $("newMemberAwaitingNote").value="";$("newMemberAwaitingTrucksBook").checked=true;
