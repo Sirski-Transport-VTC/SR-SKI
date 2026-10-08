@@ -70,7 +70,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 .admin-activity-toolbar .input{margin-top:0;flex:1;min-width:180px}
 .admin-activity-toolbar select{padding:12px 14px;border-radius:11px;border:1px solid #344054;background:#0a0f17;color:#fff}
 .admin-activity-table-wrap{overflow:auto;margin-top:16px}
-.admin-activity-details{max-width:320px;white-space:normal;word-break:break-word;color:#b9c5d5;font-size:11px}
+.admin-activity-details{max-width:320px;white-space:pre-line;word-break:break-word;color:#b9c5d5;font-size:11px}
 .admin-activity-empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed #344054;border-radius:12px;margin-top:16px}
 @media(max-width:850px){.admin-activity-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.admin-activity-stats{grid-template-columns:1fr 1fr}.admin-activity-details{max-width:220px}}
@@ -818,11 +818,85 @@ function formatActivityDate(value){
   return Number.isNaN(d.getTime())?String(value):d.toLocaleString();
 }
 
-function activityDetailsText(details){
+function humanizeActivityAction(action){
+  return String(action||"")
+    .replace(/_/g," ")
+    .toLowerCase()
+    .replace(/\b\w/g,m=>m.toUpperCase());
+}
+
+function activityDetailsText(details, rowAction=""){
   if(details==null)return "—";
   if(typeof details==="string")return details;
-  try{return JSON.stringify(details);}
-  catch(_){return String(details);}
+
+  try{
+    const root=(details && typeof details==="object")?details:{};
+    const request=(root.request && typeof root.request==="object")?root.request:{};
+    const merged={...request,...root};
+    const action=String(request.action||rowAction||"").trim();
+    const label=humanizeActivityAction(action||rowAction);
+
+    // Keep the audit display readable and never display sensitive fields.
+    const sensitive=/password|token|secret|authorization|access[_-]?key|refresh[_-]?token/i;
+    const ignored=new Set(["source","action","diagnostic"]);
+    const safeEntries=Object.entries(merged).filter(([key,value])=>
+      !ignored.has(String(key)) && !sensitive.test(String(key)) && value!==null && value!==undefined && String(value)!==""
+    );
+
+    const prettyKey=(key)=>String(key)
+      .replace(/_/g," ")
+      .replace(/\b\w/g,m=>m.toUpperCase());
+
+    const preferred={
+      delete_pending_driver:["id"],
+      add_driver:["trucksbook_id","trucksbook_username","display_name"],
+      set_active:["driver_id","active"],
+      redeem_points:["driver_id","points"],
+      add_pending_driver:["auth_user_id","trucksbook_id","trucksbook_username","display_name"],
+      add_new_member:["username","display_name","driver_id"],
+      create_member:["driver_id","email","display_name"],
+      unlink_member_login:["driver_id"],
+      link_existing_member:["driver_id","auth_email"],
+      link_existing_member_by_email:["driver_id","auth_email"],
+      reset_member_password:["driver_id"],
+      save_sponsor_slot:["slot_number","sponsor_name","prize_text"],
+      delete_gallery:["id"],
+      add_admin:["email","role"],
+      update_admin:["email","role","id"],
+      remove_admin:["email","id"],
+      reset_admin_password:["email","id"]
+    };
+
+    const orderedKeys=preferred[action]||safeEntries.map(([key])=>key);
+    const lines=[];
+
+    // Clean action title.
+    if(label)lines.push(label);
+
+    for(const key of orderedKeys){
+      const found=safeEntries.find(([k])=>String(k)===String(key));
+      if(!found)continue;
+      let value=found[1];
+      if(typeof value==="object")value=JSON.stringify(value);
+      if(typeof value==="boolean")value=value?"Yes":"No";
+      lines.push(`${prettyKey(key)}: ${String(value)}`);
+    }
+
+    // Include any additional safe fields not covered above.
+    const already=new Set(orderedKeys);
+    for(const [key,value0] of safeEntries){
+      if(already.has(String(key)))continue;
+      let value=value0;
+      if(typeof value==="object")value=JSON.stringify(value);
+      if(typeof value==="boolean")value=value?"Yes":"No";
+      lines.push(`${prettyKey(key)}: ${String(value)}`);
+    }
+
+    return lines.length?lines.join("\n"):"—";
+  }catch(_){
+    try{return JSON.stringify(details);}
+    catch(__){return String(details);}
+  }
 }
 
 function renderAdminActivity(){
@@ -835,7 +909,7 @@ function renderAdminActivity(){
     if(actionFilter && row.action!==actionFilter)return false;
     if(statusFilter && row.status!==statusFilter)return false;
     if(!search)return true;
-    const haystack=[row.admin_email,row.admin_role,row.action,row.status,row.target_email,row.target_id,activityDetailsText(row.details),row.created_at].map(v=>String(v??"").toLowerCase()).join(" ");
+    const haystack=[row.admin_email,row.admin_role,row.action,row.status,row.target_email,row.target_id,activityDetailsText(row.details,row.action),row.created_at].map(v=>String(v??"").toLowerCase()).join(" ");
     return haystack.includes(search);
   });
   if(!rows.length){
@@ -845,7 +919,7 @@ function renderAdminActivity(){
   table.innerHTML='<table class="table"><thead><tr><th>Date / Time</th><th>Administrator</th><th>Role</th><th>Action</th><th>Status</th><th>Target</th><th>Details</th></tr></thead><tbody>'+rows.map(row=>{
     const statusClass=row.status==="success"?"pill":"pill off";
     const target=[row.target_email,row.target_id].filter(Boolean).join(" · ")||"—";
-    return `<tr><td>${esc(formatActivityDate(row.created_at))}</td><td><b>${esc(row.admin_email||"—")}</b></td><td>${esc(row.admin_role||"—")}</td><td><span class="pill neutral">${esc(row.action||"—")}</span></td><td><span class="${statusClass}">${esc(row.status||"—")}</span></td><td>${esc(target)}</td><td class="admin-activity-details">${esc(activityDetailsText(row.details))}</td></tr>`;
+    return `<tr><td>${esc(formatActivityDate(row.created_at))}</td><td><b>${esc(row.admin_email||"—")}</b></td><td>${esc(row.admin_role||"—")}</td><td><span class="pill neutral">${esc(row.action||"—")}</span></td><td><span class="${statusClass}">${esc(row.status||"—")}</span></td><td>${esc(target)}</td><td class="admin-activity-details">${esc(activityDetailsText(row.details,row.action))}</td></tr>`;
   }).join('')+'</tbody></table>';
 }
 
