@@ -838,7 +838,7 @@ function activityDetailsText(details, rowAction=""){
 
     // Keep the audit display readable and never display sensitive fields.
     const sensitive=/password|token|secret|authorization|access[_-]?key|refresh[_-]?token/i;
-    const ignored=new Set(["source","action","diagnostic","request"]);
+    const ignored=new Set(["source","action","diagnostic","request","auth_user_id"]);
     const safeEntries=Object.entries(merged).filter(([key,value])=>
       !ignored.has(String(key)) && !sensitive.test(String(key)) && value!==null && value!==undefined && String(value)!==""
     );
@@ -852,7 +852,7 @@ function activityDetailsText(details, rowAction=""){
       add_driver:["trucksbook_id","trucksbook_username","display_name"],
       set_active:["driver_id","active"],
       redeem_points:["driver_id","points"],
-      add_pending_driver:["auth_user_id","trucksbook_id","trucksbook_username","display_name"],
+      add_pending_driver:["trucksbook_id","trucksbook_username","display_name"],
       add_new_member:["username","display_name","driver_id"],
       create_member:["driver_id","email","display_name"],
       unlink_member_login:["driver_id"],
