@@ -60,6 +60,21 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
 .admin-temp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 </style>
 
+
+<style>
+.admin-activity-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+.admin-activity-stat{padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0f14}
+.admin-activity-stat-label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.admin-activity-stat-value{margin-top:5px;font-size:22px;font-weight:900}
+.admin-activity-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center}
+.admin-activity-toolbar .input{margin-top:0;flex:1;min-width:180px}
+.admin-activity-toolbar select{padding:12px 14px;border-radius:11px;border:1px solid #344054;background:#0a0f17;color:#fff}
+.admin-activity-table-wrap{overflow:auto;margin-top:16px}
+.admin-activity-details{max-width:320px;white-space:normal;word-break:break-word;color:#b9c5d5;font-size:11px}
+.admin-activity-empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed #344054;border-radius:12px;margin-top:16px}
+@media(max-width:850px){.admin-activity-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.admin-activity-stats{grid-template-columns:1fr 1fr}.admin-activity-details{max-width:220px}}
+</style>
 </head>
 <body>
 
@@ -102,6 +117,43 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <a class="back" href="./spinner/index.html" style="margin-top:0">← Back to Spinner</a>
       <div class="small">Admin session remains active when returning to the Spinner.</div>
     </div>
+
+
+    <section id="adminActivitySection" class="card perm-hidden" data-master-only="true">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h2>🛡️ Admin Activity Log</h2>
+          <p class="small">Master Admin only. Review administrator logins, logouts, and recorded admin actions. Newest activity appears first.</p>
+        </div>
+        <button id="adminActivityRefresh" class="btn secondary" type="button">REFRESH ACTIVITY</button>
+      </div>
+
+      <div class="admin-activity-stats">
+        <div class="admin-activity-stat"><div class="admin-activity-stat-label">Total Records</div><div id="activityTotalRecords" class="admin-activity-stat-value">—</div></div>
+        <div class="admin-activity-stat"><div class="admin-activity-stat-label">Logins Today</div><div id="activityLoginsToday" class="admin-activity-stat-value">—</div></div>
+        <div class="admin-activity-stat"><div class="admin-activity-stat-label">Failure Records</div><div id="activityFailedRecords" class="admin-activity-stat-value">—</div></div>
+        <div class="admin-activity-stat"><div class="admin-activity-stat-label">Last Admin Login</div><div id="activityLastLogin" class="admin-activity-stat-value" style="font-size:14px;line-height:1.35">—</div></div>
+      </div>
+
+      <div id="adminActivityStatus" class="status">Loading activity...</div>
+
+      <div class="admin-activity-toolbar">
+        <input id="adminActivitySearch" class="input" type="search" placeholder="Search email, action, target, or details">
+        <select id="adminActivityAction" aria-label="Filter by action">
+          <option value="">All actions</option>
+          <option value="LOGIN">LOGIN</option>
+          <option value="LOGOUT">LOGOUT</option>
+        </select>
+        <select id="adminActivityStatusFilter" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          <option value="success">Success</option>
+          <option value="failure">Failure</option>
+        </select>
+        <button id="adminActivityClearFilters" class="btn secondary" type="button">CLEAR FILTERS</button>
+      </div>
+
+      <div id="adminActivityTable" class="admin-activity-table-wrap"></div>
+    </section>
 
     <section id="adminManagementSection" class="card perm-hidden" data-master-only="true">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -703,6 +755,84 @@ $("saveManagedAdmin").onclick=async()=>{
   }
 };
 
+
+let adminActivityLogs=[];
+
+function formatActivityDate(value){
+  if(!value)return "—";
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?String(value):d.toLocaleString();
+}
+
+function activityDetailsText(details){
+  if(details==null)return "—";
+  if(typeof details==="string")return details;
+  try{return JSON.stringify(details);}
+  catch(_){return String(details);}
+}
+
+function renderAdminActivity(){
+  const table=$("adminActivityTable");
+  if(!table)return;
+  const search=String($("adminActivitySearch")?.value||"").trim().toLowerCase();
+  const actionFilter=$("adminActivityAction")?.value||"";
+  const statusFilter=$("adminActivityStatusFilter")?.value||"";
+  const rows=adminActivityLogs.filter(row=>{
+    if(actionFilter && row.action!==actionFilter)return false;
+    if(statusFilter && row.status!==statusFilter)return false;
+    if(!search)return true;
+    const haystack=[row.admin_email,row.admin_role,row.action,row.status,row.target_email,row.target_id,activityDetailsText(row.details),row.created_at].map(v=>String(v??"").toLowerCase()).join(" ");
+    return haystack.includes(search);
+  });
+  if(!rows.length){
+    table.innerHTML='<div class="admin-activity-empty">No activity records match the current filters.</div>';
+    return;
+  }
+  table.innerHTML='<table class="table"><thead><tr><th>Date / Time</th><th>Administrator</th><th>Role</th><th>Action</th><th>Status</th><th>Target</th><th>Details</th></tr></thead><tbody>'+rows.map(row=>{
+    const statusClass=row.status==="success"?"pill":"pill off";
+    const target=[row.target_email,row.target_id].filter(Boolean).join(" · ")||"—";
+    return `<tr><td>${esc(formatActivityDate(row.created_at))}</td><td><b>${esc(row.admin_email||"—")}</b></td><td>${esc(row.admin_role||"—")}</td><td><span class="pill neutral">${esc(row.action||"—")}</span></td><td><span class="${statusClass}">${esc(row.status||"—")}</span></td><td>${esc(target)}</td><td class="admin-activity-details">${esc(activityDetailsText(row.details))}</td></tr>`;
+  }).join('')+'</tbody></table>';
+}
+
+async function loadAdminActivity(){
+  if(!adminContext?.is_master)return;
+  const status=$("adminActivityStatus");
+  if(!status)return;
+  status.className="status";
+  status.textContent="Loading admin activity...";
+  try{
+    const [logsResult,statsResult]=await Promise.all([
+      adminCall("list_admin_activity",{limit:500}),
+      adminCall("get_admin_activity_stats")
+    ]);
+    adminActivityLogs=logsResult.logs||[];
+    const stats=statsResult||{};
+    $("activityTotalRecords").textContent=String(stats.total_records??adminActivityLogs.length);
+    $("activityLoginsToday").textContent=String(stats.logins_today??0);
+    $("activityFailedRecords").textContent=String(stats.failed_records??0);
+    $("activityLastLogin").textContent=stats.last_admin_login?formatActivityDate(stats.last_admin_login):"No successful login";
+    renderAdminActivity();
+    status.textContent=`${adminActivityLogs.length} activity record${adminActivityLogs.length===1?"":"s"} loaded.`;
+  }catch(e){
+    console.error("Admin Activity load failed:",e);
+    status.className="status error";
+    status.textContent=e?.message||"Unable to load admin activity.";
+    $("adminActivityTable").innerHTML="";
+  }
+}
+
+$("adminActivityRefresh").onclick=()=>loadAdminActivity();
+$("adminActivitySearch").oninput=renderAdminActivity;
+$("adminActivityAction").onchange=renderAdminActivity;
+$("adminActivityStatusFilter").onchange=renderAdminActivity;
+$("adminActivityClearFilters").onclick=()=>{
+  $("adminActivitySearch").value="";
+  $("adminActivityAction").value="";
+  $("adminActivityStatusFilter").value="";
+  renderAdminActivity();
+};
+
 function initializeAdmin(){
   if(adminInitPromise) return adminInitPromise;
   adminInitPromise=(async()=>{
@@ -730,6 +860,7 @@ function initializeAdmin(){
 
     // Master Admin always sees these sections.
     $("adminManagementSection").classList.toggle("perm-hidden",!isMaster);
+    $("adminActivitySection").classList.toggle("perm-hidden",!isMaster);
     $("resetSecondaryAdminSection").style.display=isMaster?"block":"none";
     $("addNewMemberSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!isMaster);
     $("pendingDriversSection").classList.toggle("perm-hidden",p.add_new_members!==true&&!isMaster);
@@ -746,6 +877,7 @@ function initializeAdmin(){
     // Sponsor Slots, Gallery, or the other sections from loading.
     const tasks=[];
     if(isMaster) tasks.push(Promise.resolve().then(()=>loadAdminManagement()));
+    if(isMaster) tasks.push(Promise.resolve().then(()=>loadAdminActivity()));
     if(p.add_new_members===true||isMaster) tasks.push(Promise.resolve().then(()=>loadPendingDrivers()));
     if(p.member_accounts===true||p.link_accounts===true||p.password_reset===true||p.member_gallery===true||isMaster) {
       tasks.push(Promise.resolve().then(()=>loadMemberAccounts()));
@@ -999,7 +1131,12 @@ $("resetMember").onclick=async()=>{
   finally{$("resetMember").disabled=false}
 };
 $("refresh").onclick=()=>loadMemberAccounts().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
-$("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
+$("logout").onclick=async()=>{
+  try{if(adminContext?.is_master)await adminCall("record_admin_logout");}
+  catch(e){console.warn("Unable to record admin logout:",e);}
+  await sb.auth.signOut();
+  location.reload();
+};
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session)await initializeAdmin();})();
 
 async function loadSponsorSlots(){
