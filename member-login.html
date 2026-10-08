@@ -23,12 +23,6 @@
 <div id="msg"></div>
 <p class="small">Your Sirski login email is your account identity. It does not need to be a working mailbox.</p>
 </div>
-<div id="diagnosticPanel" class="panel hidden">
-<span class="badge">ADMIN LOGIN DIAGNOSTIC</span>
-<h2>Recorder Response</h2>
-<p class="small">Temporary diagnostic only. This shows the exact response returned by the Project 1 <code>record_admin_login</code> Edge Function.</p>
-<pre id="diagnosticOutput" style="white-space:pre-wrap;word-break:break-word;background:#080a0d;border:1px solid #29313d;border-radius:12px;padding:14px;color:#f2c300;font-size:12px;line-height:1.5;max-height:420px;overflow:auto"></pre>
-</div>
 <div id="authPanel" class="panel hidden">
 <span id="authBadge" class="badge">ACCOUNT SETUP</span>
 <h2 id="authTitle">Set your password</h2>
@@ -56,37 +50,26 @@ async function goAfterLogin(recordAdminLogin=false){
     if(!error&&data){
       const allowed=data.is_master===true||Object.values(data.permissions||{}).some(v=>v===true);
       if(allowed){
-        if(recordAdminLogin){
-          const result=await sb.functions.invoke("admin",{body:{action:"record_admin_login"}});
-          const output={
-            edge_function_error:result.error?{
-              message:result.error.message||null,
-              name:result.error.name||null,
-              status:result.error.status||null
-            }:null,
-            edge_function_data:result.data??null,
-            note:"Temporary diagnostic. No redirect performed so the full response can be inspected."
-          };
-          document.getElementById("normalView").classList.add("hidden");
-          document.getElementById("diagnosticPanel").classList.remove("hidden");
-          document.getElementById("diagnosticOutput").textContent=JSON.stringify(output,null,2);
-          msg.textContent=result.error?"The recorder returned an error. See the diagnostic response below.":"The recorder returned successfully. See the diagnostic response below.";
-          return;
+        if(recordAdminLogin && data.is_master===true){
+          try{
+            const result=await sb.functions.invoke("admin",{body:{action:"record_admin_login"}});
+            if(result.error){
+              console.error("Admin login recording failed:",result.error);
+            }else{
+              console.log("Admin login recorded successfully.",result.data);
+            }
+          }catch(error){
+            console.error("Admin login recording exception:",error);
+          }
         }
         location.replace("./admin.html");
-        return
+        return;
       }
     }
   }catch(error){
     console.error("Admin access check failed:",error);
-    if(recordAdminLogin){
-      document.getElementById("normalView").classList.add("hidden");
-      document.getElementById("diagnosticPanel").classList.remove("hidden");
-      document.getElementById("diagnosticOutput").textContent=JSON.stringify({exception:error?.message||String(error)},null,2);
-      return;
-    }
   }
-  location.replace("./member-dashboard.html")
+  location.replace("./member-dashboard.html");
 }
 
 function showPasswordPanel(type){authFlow=true;document.getElementById("normalView").classList.add("hidden");document.getElementById("authPanel").classList.remove("hidden");const badge=document.getElementById("authBadge"),title=document.getElementById("authTitle"),description=document.getElementById("authDescription");if(type==="invite"){badge.textContent="ADMIN / MEMBER INVITATION";title.textContent="Create your Sirski password";description.textContent="Your invitation has been accepted. Create a password to finish setting up your Sirski account."}else if(type==="recovery"){badge.textContent="PASSWORD RECOVERY";title.textContent="Set a new password";description.textContent="Create a new Sirski password below. After saving it, your account will automatically open the correct Sirski area."}else{badge.textContent="ACCOUNT SETUP";title.textContent="Set your Sirski password";description.textContent="Create your password to finish setting up your Sirski account."}}
