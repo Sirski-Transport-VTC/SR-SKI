@@ -912,12 +912,30 @@ Email: ${email}
 Temporary Password: ${password}`)){btn.textContent="COPIED";setTimeout(()=>btn.textContent="COPY CREDENTIALS",1200);}else{btn.textContent="COPY FAILED";setTimeout(()=>btn.textContent="COPY CREDENTIALS",1600);}};
 
 $("loginBtn").onclick=async()=>{
+  const loginEmail=$("adminEmail").value.trim();
+  const loginPassword=$("adminPassword").value;
   $("loginStatus").className="status";
   $("loginStatus").textContent="Signing in...";
   try{
-    const {error}=await sb.auth.signInWithPassword({email:$("adminEmail").value.trim(),password:$("adminPassword").value});
-    if(error)throw error;
+    const {error}=await sb.auth.signInWithPassword({email:loginEmail,password:loginPassword});
+    if(error){
+      try{
+        await sb.functions.invoke("admin",{body:{
+          action:"record_admin_login_failure",
+          email:loginEmail,
+          failure_reason:error.message||"authentication_failed"
+        }});
+      }catch(recordError){
+        console.warn("Unable to record admin login failure:",recordError);
+      }
+      throw error;
+    }
     await initializeAdmin();
+    try{
+      await sb.functions.invoke("admin",{body:{action:"record_admin_login"}});
+    }catch(recordError){
+      console.warn("Unable to record admin login:",recordError);
+    }
     $("loginStatus").textContent="";
   }catch(e){
     $("loginStatus").textContent=e.message;
@@ -1132,7 +1150,7 @@ $("resetMember").onclick=async()=>{
 };
 $("refresh").onclick=()=>loadMemberAccounts().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{
-  try{if(adminContext?.is_master)await adminCall("record_admin_logout");}
+  try{if(adminContext)await adminCall("record_admin_logout");}
   catch(e){console.warn("Unable to record admin logout:",e);}
   await sb.auth.signOut();
   location.reload();
