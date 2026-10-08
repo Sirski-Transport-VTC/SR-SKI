@@ -40,7 +40,7 @@
 <script>
 const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");
 const msg=document.getElementById("msg"),authMsg=document.getElementById("authMsg");
-let authFlow=false,passwordWasSet=false,diagnosticLoginInProgress=false;
+let authFlow=false,passwordWasSet=false;
 function getAuthType(){const hash=new URLSearchParams((location.hash||"").replace(/^#/,"")),query=new URLSearchParams(location.search||"");return(hash.get("type")||query.get("type")||"").toLowerCase()}
 function isPasswordSetupFlow(){const type=getAuthType();return type==="invite"||type==="recovery"||type==="signup"}
 
@@ -50,7 +50,7 @@ async function goAfterLogin(recordAdminLogin=false){
     if(!error&&data){
       const allowed=data.is_master===true||Object.values(data.permissions||{}).some(v=>v===true);
       if(allowed){
-        if(recordAdminLogin && data.is_master===true){
+        if(recordAdminLogin){
           try{
             const result=await sb.functions.invoke("admin",{body:{action:"record_admin_login"}});
             if(result.error){
@@ -79,17 +79,28 @@ async function initialize(){const type=getAuthType(),{data:{session}}=await sb.a
 document.getElementById("login").onclick=async()=>{
   const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
   if(!email||!password){msg.textContent="Please enter your email and password.";return}
-  diagnosticLoginInProgress=true;
   msg.textContent="Signing in...";
   const {error}=await sb.auth.signInWithPassword({email,password});
-  if(error){diagnosticLoginInProgress=false;msg.textContent=error.message;return}
+  if(error){
+    try{
+      await sb.functions.invoke("admin",{body:{
+        action:"record_admin_login_failure",
+        email,
+        failure_reason:error.message||"authentication_failed"
+      }});
+    }catch(recordError){
+      console.warn("Unable to record admin login failure:",recordError);
+    }
+    msg.textContent=error.message;
+    return;
+  }
   msg.textContent="Checking account access...";
   await goAfterLogin(true);
 };
 
 document.getElementById("setPassword").onclick=async()=>{const a=document.getElementById("newPassword").value,b=document.getElementById("confirmPassword").value;if(a.length<6){authMsg.textContent="Password must be at least 6 characters.";return}if(a!==b){authMsg.textContent="Passwords do not match.";return}authMsg.textContent="Saving your password...";const {error}=await sb.auth.updateUser({password:a});if(error){authMsg.textContent=error.message;return}passwordWasSet=true;authMsg.textContent="Password saved. Checking account access...";await goAfterLogin()};
 
-sb.auth.onAuthStateChange(async(event,session)=>{if(!session)return;if(isPasswordSetupFlow()&&!passwordWasSet){showPasswordPanel(getAuthType());return}if(!authFlow&&!diagnosticLoginInProgress&&(event==="SIGNED_IN"||event==="INITIAL_SESSION")){await goAfterLogin()}});
+sb.auth.onAuthStateChange(async(event,session)=>{if(!session)return;if(isPasswordSetupFlow()&&!passwordWasSet){showPasswordPanel(getAuthType());return}if(!authFlow&&(event==="SIGNED_IN"||event==="INITIAL_SESSION")){await goAfterLogin()}});
 
 initialize().catch(()=>{});
 </script>
