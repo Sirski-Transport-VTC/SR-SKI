@@ -23,6 +23,12 @@
 <div id="msg"></div>
 <p class="small">Your Sirski login email is your account identity. It does not need to be a working mailbox.</p>
 </div>
+<div id="diagnosticPanel" class="panel hidden">
+<span class="badge">ADMIN LOGIN DIAGNOSTIC</span>
+<h2>Recorder Response</h2>
+<p class="small">Temporary diagnostic only. This shows the exact response returned by the Project 1 <code>record_admin_login</code> Edge Function.</p>
+<pre id="diagnosticOutput" style="white-space:pre-wrap;word-break:break-word;background:#080a0d;border:1px solid #29313d;border-radius:12px;padding:14px;color:#f2c300;font-size:12px;line-height:1.5;max-height:420px;overflow:auto"></pre>
+</div>
 <div id="authPanel" class="panel hidden">
 <span id="authBadge" class="badge">ACCOUNT SETUP</span>
 <h2 id="authTitle">Set your password</h2>
@@ -40,7 +46,7 @@
 <script>
 const sb=supabase.createClient("https://smlomuibfgezvkmpvstk.supabase.co","sb_publishable_VmMmKh9_GHt9qqD6UXpzqw_Z3raeke-");
 const msg=document.getElementById("msg"),authMsg=document.getElementById("authMsg");
-let authFlow=false,passwordWasSet=false;
+let authFlow=false,passwordWasSet=false,diagnosticLoginInProgress=false;
 function getAuthType(){const hash=new URLSearchParams((location.hash||"").replace(/^#/,"")),query=new URLSearchParams(location.search||"");return(hash.get("type")||query.get("type")||"").toLowerCase()}
 function isPasswordSetupFlow(){const type=getAuthType();return type==="invite"||type==="recovery"||type==="signup"}
 
@@ -52,12 +58,20 @@ async function goAfterLogin(recordAdminLogin=false){
       if(allowed){
         if(recordAdminLogin){
           const result=await sb.functions.invoke("admin",{body:{action:"record_admin_login"}});
-          if(result.error){
-            console.error("record_admin_login failed:",result.error);
-            msg.textContent="Admin login recording failed: "+(result.error.message||"Unknown error");
-          }else{
-            console.log("Admin login recorded successfully.");
-          }
+          const output={
+            edge_function_error:result.error?{
+              message:result.error.message||null,
+              name:result.error.name||null,
+              status:result.error.status||null
+            }:null,
+            edge_function_data:result.data??null,
+            note:"Temporary diagnostic. No redirect performed so the full response can be inspected."
+          };
+          document.getElementById("normalView").classList.add("hidden");
+          document.getElementById("diagnosticPanel").classList.remove("hidden");
+          document.getElementById("diagnosticOutput").textContent=JSON.stringify(output,null,2);
+          msg.textContent=result.error?"The recorder returned an error. See the diagnostic response below.":"The recorder returned successfully. See the diagnostic response below.";
+          return;
         }
         location.replace("./admin.html");
         return
@@ -65,6 +79,12 @@ async function goAfterLogin(recordAdminLogin=false){
     }
   }catch(error){
     console.error("Admin access check failed:",error);
+    if(recordAdminLogin){
+      document.getElementById("normalView").classList.add("hidden");
+      document.getElementById("diagnosticPanel").classList.remove("hidden");
+      document.getElementById("diagnosticOutput").textContent=JSON.stringify({exception:error?.message||String(error)},null,2);
+      return;
+    }
   }
   location.replace("./member-dashboard.html")
 }
@@ -76,16 +96,17 @@ async function initialize(){const type=getAuthType(),{data:{session}}=await sb.a
 document.getElementById("login").onclick=async()=>{
   const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
   if(!email||!password){msg.textContent="Please enter your email and password.";return}
+  diagnosticLoginInProgress=true;
   msg.textContent="Signing in...";
   const {error}=await sb.auth.signInWithPassword({email,password});
-  if(error){msg.textContent=error.message;return}
+  if(error){diagnosticLoginInProgress=false;msg.textContent=error.message;return}
   msg.textContent="Checking account access...";
-  await goAfterLogin(true)
+  await goAfterLogin(true);
 };
 
 document.getElementById("setPassword").onclick=async()=>{const a=document.getElementById("newPassword").value,b=document.getElementById("confirmPassword").value;if(a.length<6){authMsg.textContent="Password must be at least 6 characters.";return}if(a!==b){authMsg.textContent="Passwords do not match.";return}authMsg.textContent="Saving your password...";const {error}=await sb.auth.updateUser({password:a});if(error){authMsg.textContent=error.message;return}passwordWasSet=true;authMsg.textContent="Password saved. Checking account access...";await goAfterLogin()};
 
-sb.auth.onAuthStateChange(async(event,session)=>{if(!session)return;if(isPasswordSetupFlow()&&!passwordWasSet){showPasswordPanel(getAuthType());return}if(!authFlow&&(event==="SIGNED_IN"||event==="INITIAL_SESSION")){await goAfterLogin()}});
+sb.auth.onAuthStateChange(async(event,session)=>{if(!session)return;if(isPasswordSetupFlow()&&!passwordWasSet){showPasswordPanel(getAuthType());return}if(!authFlow&&!diagnosticLoginInProgress&&(event==="SIGNED_IN"||event==="INITIAL_SESSION")){await goAfterLogin()}});
 
 initialize().catch(()=>{});
 </script>
