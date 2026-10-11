@@ -1531,13 +1531,38 @@ async function loadSpinnerResults(){
     const r=await adminCall("list_spinner_results");
     const real=r.real_spins||[];
     const demo=r.demo_spins||[];
-    const fmtSlot=v=>v==null?"Not recorded (older spin)":`Slot ${Number(v)}`;
+    const slotLabels={
+      1:"FULL TANK · EMPTY WALLET",
+      2:"2 POINTS · COFFEE RUN",
+      3:"NO BRAKES, NO PROBLEM",
+      4:"COFFEE FIRST",
+      5:"5 POINTS · HEAVY HAUL",
+      6:"GPS SAYS TURN LEFT",
+      7:"MORE MILES, MORE STORIES",
+      8:"2 POINTS · COFFEE RUN",
+      9:"HORN GOES BEEP BEEP",
+      10:"TRUCK THIRSTY",
+      11:"5 POINTS · HEAVY HAUL",
+      12:"SLEEPY TRUCKER",
+      13:"MIRROR, MIRROR",
+      14:"LONG HAUL, SHORT PATIENCE",
+      15:"KEEP ROLLING",
+      16:"TRUCKER LOGIC",
+      17:"PARKING LOT BOSS",
+      18:"10 POINTS · KING OF ROAD",
+      19:"DIESEL THERAPY",
+      20:"HARD HAUL, GOOD VIBES",
+      21:"JACKPOT FROM SIRSKI TRANSPORT"
+    };
+    const fmtSlot=v=>v==null
+      ? '<span class="small">Not recorded (older spin)</span>'
+      : `<b>Slot ${Number(v)}</b><div class="small" style="margin-top:4px">${esc(slotLabels[Number(v)]||"Unknown slot")}</div>`;
     const fmtDate=v=>v?new Date(v).toLocaleString():"—";
     realTable.innerHTML=real.length
-      ? '<div style="overflow:auto"><table class="table"><tr><th>Member</th><th>Date / Time</th><th>Friday</th><th>Landed Slot</th><th>Prize Points</th></tr>'+real.map(x=>`<tr><td><b>${esc(x.driver?.display_name||x.driver?.trucksbook_username||"Unknown driver")}</b><div class="small">${esc(x.driver?.trucksbook_username||"")}</div></td><td>${esc(fmtDate(x.created_at))}</td><td>${esc(x.friday_key||"—")}</td><td><b>${esc(fmtSlot(x.slot_index))}</b></td><td>${Number(x.prize)||0}</td></tr>`).join("")+'</table></div>'
+      ? '<div style="overflow:auto"><table class="table"><tr><th>Member</th><th>Date / Time</th><th>Friday</th><th>Landed Slot</th><th>Prize Points</th></tr>'+real.map(x=>`<tr><td><b>${esc(x.driver?.display_name||x.driver?.trucksbook_username||"Unknown driver")}</b><div class="small">${esc(x.driver?.trucksbook_username||"")}</div></td><td>${esc(fmtDate(x.created_at))}</td><td>${esc(x.friday_key||"—")}</td><td>${fmtSlot(x.slot_index)}</td><td>${Number(x.prize)||0}</td></tr>`).join("")+'</table></div>'
       : '<div class="small">No real member spins found.</div>';
     demoTable.innerHTML=demo.length
-      ? '<div style="overflow:auto"><table class="table"><tr><th>Visitor</th><th>Date / Time</th><th>Demo Spin</th><th>Landed Slot</th><th>Prize Points</th></tr>'+demo.map(x=>`<tr><td><b>${esc(x.visitor_name||"Unnamed visitor")}</b></td><td>${esc(fmtDate(x.created_at))}</td><td>${Number(x.spin_number)||0}/5</td><td><b>${esc(fmtSlot(x.slot_index))}</b></td><td>0 (demo)</td></tr>`).join("")+'</table></div>'
+      ? '<div style="overflow:auto"><table class="table"><tr><th>Visitor</th><th>Date / Time</th><th>Demo Spin</th><th>Landed Slot</th><th>Prize Points</th></tr>'+demo.map(x=>`<tr><td><b>${esc(x.visitor_name||"Unnamed visitor")}</b></td><td>${esc(fmtDate(x.created_at))}</td><td>${Number(x.spin_number)||0}/5</td><td>${fmtSlot(x.slot_index)}</td><td>0 (demo)</td></tr>`).join("")+'</table></div>'
       : '<div class="small">No named public demo spins found.</div>';
     status.textContent=`Loaded ${real.length} real member spin${real.length===1?'':'s'} and ${demo.length} named demo spin${demo.length===1?'':'s'}.`;
   }catch(e){
