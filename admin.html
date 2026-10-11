@@ -1353,10 +1353,36 @@ $("resetMember").onclick=async()=>{
 };
 $("refresh").onclick=()=>loadMemberAccounts().catch(e=>{$("createStatus").textContent=e.message;$("createStatus").className="status error"});
 $("logout").onclick=async()=>{
-  try{if(adminContext)await adminCall("record_admin_logout");}
-  catch(e){console.warn("Unable to record admin logout:",e);}
-  await sb.auth.signOut();
-  location.reload();
+  const button=$("logout");
+  button.disabled=true;
+  const originalText=button.textContent;
+  button.textContent="Logging out...";
+  try{
+    // Write the audit record directly and wait for the Edge Function response
+    // before ending the authenticated session.
+    const {data:logoutResult,error:logoutError}=await sb.functions.invoke("admin",{
+      body:{action:"record_admin_logout"}
+    });
+    if(logoutError){
+      let message=logoutError.message||"Unable to record admin logout.";
+      try{
+        const response=logoutError.context?.clone?.();
+        const payload=await response?.json?.();
+        if(payload?.error)message=payload.error;
+      }catch(_){}
+      console.error("Admin logout audit request failed:",message);
+    }else if(logoutResult?.success!==true){
+      console.error("Admin logout audit was not confirmed:",logoutResult);
+    }else{
+      console.info("Admin logout recorded:",logoutResult.log_id||"recorded");
+    }
+  }catch(e){
+    console.error("Unable to record admin logout:",e);
+  }finally{
+    // Do not trap the administrator in the dashboard if audit logging fails.
+    await sb.auth.signOut();
+    location.reload();
+  }
 };
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session)await initializeAdmin();})();
 
