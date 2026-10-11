@@ -367,6 +367,23 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
         </div>
         <button id="demoVisitorsRefresh" class="btn secondary" style="width:auto">REFRESH</button>
       </div>
+      <div class="notice" style="margin-top:14px">
+        <b>Visitor record management:</b> delete individual demo records or keep a selected number of the newest records. These actions permanently delete records from the database.
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+        <label class="label" for="demoVisitorsRetention" style="margin-top:0">Keep newest records
+          <select id="demoVisitorsRetention" class="admin-role-select" style="margin-top:7px;min-width:180px">
+            <option value="10">Keep latest 10</option>
+            <option value="15" selected>Keep latest 15</option>
+            <option value="20">Keep latest 20</option>
+            <option value="25">Keep latest 25</option>
+            <option value="50">Keep latest 50</option>
+            <option value="100">Keep latest 100</option>
+            <option value="250">Keep latest 250</option>
+          </select>
+        </label>
+        <button id="demoVisitorsApplyRetention" class="btn" type="button" style="margin-top:18px">APPLY RETENTION</button>
+      </div>
       <div id="demoVisitorsStatus" class="status">Loading demo visitors...</div>
       <div id="demoVisitorsTable"></div>
     </section>
@@ -411,7 +428,8 @@ const AUDITABLE_ADMIN_ACTIONS=new Set([
   "create_member","link_existing_member","link_existing_member_by_email",
   "unlink_member_login","reset_member_password",
   "save_sponsor_slot","delete_gallery","change_own_password",
-  "add_driver","set_active","redeem_points"
+  "add_driver","set_active","redeem_points",
+  "delete_demo_visitor","retain_demo_visitors"
 ]);
 
 function auditSafeBody(body={}){
@@ -1464,16 +1482,67 @@ async function loadDemoVisitors(){
       status.textContent="No named public demo visitors yet.";
       return;
     }
-    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th></tr>'+
-      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td></tr>`).join("")+      '</table></div>';
-    status.textContent=`${visitors.length} named demo use${visitors.length===1?'':'s'} recorded.`;
+    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th><th>Action</th></tr>'+
+      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td><td><button type="button" class="admin-mini-btn danger" data-demo-delete="${esc(v.id)}">DELETE</button></td></tr>`).join("")+
+      '</table></div>';
+    status.textContent=`${visitors.length} named demo use${visitors.length===1?'':'s'} listed.`;
+    table.querySelectorAll("[data-demo-delete]").forEach(button=>{
+      button.addEventListener("click",async()=>{
+        const id=button.getAttribute("data-demo-delete");
+        const row=button.closest("tr");
+        const visitorName=row?.querySelector("td b")?.textContent||"this visitor";
+        if(!id||!confirm(`Permanently delete the demo record for "${visitorName}"? This cannot be undone.`))return;
+        button.disabled=true;
+        button.textContent="DELETING...";
+        status.className="status";
+        status.textContent="Deleting visitor record...";
+        try{
+          await adminCall("delete_demo_visitor",{id});
+          status.textContent="Visitor record deleted.";
+          await loadDemoVisitors();
+        }catch(e){
+          button.disabled=false;
+          button.textContent="DELETE";
+          status.className="status error";
+          status.textContent=e.message||"Unable to delete visitor record.";
+        }
+      });
+    });
   }catch(e){
     status.className="status error";
     status.textContent=e.message||"Unable to load public demo visitors.";
   }
 }
 
+async function applyDemoVisitorRetention(){
+  const status=$("demoVisitorsStatus");
+  const keepCount=Number($("demoVisitorsRetention").value);
+  if(![10,15,20,25,50,100,250].includes(keepCount)){
+    status.className="status error";
+    status.textContent="Choose a valid retention count.";
+    return;
+  }
+  if(!confirm(`Keep only the newest ${keepCount} public demo visitor records and permanently delete all older records? This cannot be undone.`))return;
+  const button=$("demoVisitorsApplyRetention");
+  button.disabled=true;
+  button.textContent="APPLYING...";
+  status.className="status";
+  status.textContent=`Applying retention: keeping latest ${keepCount} records...`;
+  try{
+    const result=await adminCall("retain_demo_visitors",{keep_count:keepCount});
+    await loadDemoVisitors();
+    status.textContent=`Retention complete. Kept ${result.kept_count} newest record(s); deleted ${result.deleted_count} older record(s).`;
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to apply visitor retention.";
+  }finally{
+    button.disabled=false;
+    button.textContent="APPLY RETENTION";
+  }
+}
+
 $("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
+$("demoVisitorsApplyRetention").onclick=()=>applyDemoVisitorRetention();
 
 $("galleryRefresh").onclick=()=>loadAdminGallery();
 
