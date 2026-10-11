@@ -222,7 +222,8 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
           <label class="permission-box"><input type="checkbox" data-permission="member_accounts"> Member Accounts</label>
           <label class="permission-box"><input type="checkbox" data-permission="add_new_members"> Add New Members</label>
           <label class="permission-box"><input type="checkbox" data-permission="driver_accounts"> Driver Accounts</label>
-          <label class="permission-box"><input type="checkbox" data-permission="demo_visitors"> Demo Visitors</label>
+          <label class="permission-box"><input type="checkbox" data-permission="demo_visitors"> View Demo Visitors</label>
+          <label class="permission-box"><input type="checkbox" data-permission="delete_demo_visitors"> Delete Demo Visitors / Apply Retention</label>
           <label class="permission-box"><input type="checkbox" data-permission="password_reset"> Reset Member Passwords</label>
           <label class="permission-box"><input type="checkbox" data-permission="link_accounts"> Link Member Accounts</label>
           <label class="permission-box"><input type="checkbox" data-permission="admin_management"> Admin Management</label>
@@ -367,10 +368,10 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
         </div>
         <button id="demoVisitorsRefresh" class="btn secondary" style="width:auto">REFRESH</button>
       </div>
-      <div class="notice" style="margin-top:14px">
+      <div id="demoVisitorsDeleteNotice" class="notice" style="margin-top:14px">
         <b>Visitor record management:</b> delete individual demo records or keep a selected number of the newest records. These actions permanently delete records from the database.
       </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+      <div id="demoVisitorsRetentionControls" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
         <label class="label" for="demoVisitorsRetention" style="margin-top:0">Keep newest records
           <select id="demoVisitorsRetention" class="admin-role-select" style="margin-top:7px;min-width:180px">
             <option value="10">Keep latest 10</option>
@@ -612,7 +613,8 @@ const permissionLabels={
   member_accounts:"Member Accounts",
   add_new_members:"Add New Members",
   driver_accounts:"Driver Accounts",
-  demo_visitors:"Demo Visitors",
+  demo_visitors:"View Demo Visitors",
+  delete_demo_visitors:"Delete Demo Visitors / Apply Retention",
   password_reset:"Reset Member Passwords",
   link_accounts:"Link Member Accounts",
   admin_management:"Admin Management"
@@ -1065,6 +1067,9 @@ function initializeAdmin(){
     $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!isMaster);
     $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!isMaster);
     $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!isMaster);
+    const canDeleteDemoVisitors=isMaster||p.delete_demo_visitors===true;
+    $("demoVisitorsDeleteNotice").classList.toggle("perm-hidden",!canDeleteDemoVisitors);
+    $("demoVisitorsRetentionControls").classList.toggle("perm-hidden",!canDeleteDemoVisitors);
     $("sponsorSlotsSection").classList.toggle("perm-hidden",p.sponsor_slots!==true&&!isMaster);
     $("memberGallerySection").classList.toggle("perm-hidden",p.member_gallery!==true&&!isMaster);
 
@@ -1482,10 +1487,12 @@ async function loadDemoVisitors(){
       status.textContent="No named public demo visitors yet.";
       return;
     }
-    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th><th>Action</th></tr>'+
-      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td><td><button type="button" class="admin-mini-btn danger" data-demo-delete="${esc(v.id)}">DELETE</button></td></tr>`).join("")+
+    const canDeleteDemoVisitors=adminContext?.is_master===true||adminContext?.permissions?.delete_demo_visitors===true;
+    table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor Name</th><th>Date / Time</th><th>Demo Spin</th>'+(canDeleteDemoVisitors?'<th>Action</th>':'')+'</tr>'+
+      visitors.map(v=>`<tr><td><b>${esc(v.visitor_name)}</b></td><td>${esc(new Date(v.created_at).toLocaleString())}</td><td>${Number(v.spin_number)||0}/5</td>`+(canDeleteDemoVisitors?`<td><button type="button" class="admin-mini-btn danger" data-demo-delete="${esc(v.id)}">DELETE</button></td>`:'')+'</tr>').join("")+
       '</table></div>';
     status.textContent=`${visitors.length} named demo use${visitors.length===1?'':'s'} listed.`;
+    if(!canDeleteDemoVisitors)return;
     table.querySelectorAll("[data-demo-delete]").forEach(button=>{
       button.addEventListener("click",async()=>{
         const id=button.getAttribute("data-demo-delete");
@@ -1515,6 +1522,9 @@ async function loadDemoVisitors(){
 }
 
 async function applyDemoVisitorRetention(){
+  if(!(adminContext?.is_master===true||adminContext?.permissions?.delete_demo_visitors===true)){
+    const denied=$("demoVisitorsStatus");denied.className="status error";denied.textContent="Permission required: Delete Demo Visitors / Apply Retention.";return;
+  }
   const status=$("demoVisitorsStatus");
   const keepCount=Number($("demoVisitorsRetention").value);
   if(![10,15,20,25,50,100,250].includes(keepCount)){
