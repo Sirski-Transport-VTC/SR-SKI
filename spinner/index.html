@@ -92,7 +92,7 @@ async function getMemberSession(){
   }
 }
 
-async function recordNamedDemo(name,spinNumber){
+async function recordNamedDemo(name,spinNumber,slotIndex){
   const clean=String(name||'').trim();
   if(!clean) return;
   try{
@@ -100,7 +100,8 @@ async function recordNamedDemo(name,spinNumber){
     const {error}=await client.from('spinner_demo_usage').insert({
       visitor_name:clean,
       session_id:demoSessionId,
-      spin_number:spinNumber
+      spin_number:spinNumber,
+      slot_index:slotIndex
     });
     if(error) throw error;
   }catch(e){
@@ -175,11 +176,11 @@ function demoSpin(){
   $('result').style.display='none';
   setStatus(`Demo spin ${spinNumber} of 5 — no prize is recorded.`);
 
-  // Record only named public demo users. Blank names are intentionally not stored.
-  recordNamedDemo(visitorName,spinNumber);
-
+  // Blank-name demo spins remain intentionally unrecorded.
   const target=Math.floor(Math.random()*slots.length), slot=slots[target];
   spinAnimation(target,()=>{
+    // Save the result after the wheel lands so the stored slot matches the animation.
+    void recordNamedDemo(visitorName,spinNumber,target+1);
     const display=slot.type==='quote'?'🚛':slot.type==='jackpot'?'':values[target];
     $('prize').textContent=display;
     $('resultText').textContent=slot.type==='jackpot'?'DEMO: JACKPOT from Sirski Transport — demo spins never award the jackpot.':slot.type==='quote'?`DEMO: ${slot.text}`:`DEMO: ${captionForSlot(slot)}`;
