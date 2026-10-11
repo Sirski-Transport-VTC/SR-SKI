@@ -223,6 +223,7 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
           <label class="permission-box"><input type="checkbox" data-permission="add_new_members"> Add New Members</label>
           <label class="permission-box"><input type="checkbox" data-permission="driver_accounts"> Driver Accounts</label>
           <label class="permission-box"><input type="checkbox" data-permission="demo_visitors"> View Demo Visitors</label>
+          <label class="permission-box"><input type="checkbox" data-permission="view_spinner_results"> View Spinner Results</label>
           <label class="permission-box"><input type="checkbox" data-permission="delete_demo_visitors"> Delete Demo Visitors / Apply Retention</label>
           <label class="permission-box"><input type="checkbox" data-permission="password_reset"> Reset Member Passwords</label>
           <label class="permission-box"><input type="checkbox" data-permission="link_accounts"> Link Member Accounts</label>
@@ -358,6 +359,21 @@ window.SIRSKI_CONFIG = window.SIRSKI_CONFIG || {
       <div class="small">A member can sign in only after their Sirski account is linked to their driver record.</div>
       <div id="driversStatus" class="status">Loading driver accounts...</div>
       <div id="driversTable"></div>
+    </section>
+
+    <section id="spinnerResultsSection" class="card perm-hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h2>🎯 Spinner Results</h2>
+          <p class="small">Actual landed slot for recorded real member spins and named public demo spins. Older records without a saved slot are marked as not recorded.</p>
+        </div>
+        <button id="spinnerResultsRefresh" class="btn secondary" type="button">REFRESH RESULTS</button>
+      </div>
+      <div id="spinnerResultsStatus" class="status">Loading spinner results...</div>
+      <h3 style="margin-top:18px">Real Member Spins</h3>
+      <div id="realSpinnerResultsTable"></div>
+      <h3 style="margin-top:24px">Public Demo Spins</h3>
+      <div id="demoSpinnerResultsTable"></div>
     </section>
 
     <section id="demoVisitorsSection" class="card">
@@ -614,6 +630,7 @@ const permissionLabels={
   add_new_members:"Add New Members",
   driver_accounts:"Driver Accounts",
   demo_visitors:"View Demo Visitors",
+  view_spinner_results:"View Spinner Results",
   delete_demo_visitors:"Delete Demo Visitors / Apply Retention",
   password_reset:"Reset Member Passwords",
   link_accounts:"Link Member Accounts",
@@ -1067,6 +1084,7 @@ function initializeAdmin(){
     $("passwordResetSection").classList.toggle("perm-hidden",p.password_reset!==true&&!isMaster);
     $("driverAccountsSection").classList.toggle("perm-hidden",p.driver_accounts!==true&&!isMaster);
     $("demoVisitorsSection").classList.toggle("perm-hidden",p.demo_visitors!==true&&!isMaster);
+    $("spinnerResultsSection").classList.toggle("perm-hidden",p.view_spinner_results!==true&&!isMaster);
     const canDeleteDemoVisitors=isMaster||p.delete_demo_visitors===true;
     $("demoVisitorsDeleteNotice").classList.toggle("perm-hidden",!canDeleteDemoVisitors);
     $("demoVisitorsRetentionControls").classList.toggle("perm-hidden",!canDeleteDemoVisitors);
@@ -1086,6 +1104,7 @@ function initializeAdmin(){
     if(p.driver_accounts===true||isMaster) tasks.push(Promise.resolve().then(()=>loadDrivers()));
     if(p.member_gallery===true||isMaster) tasks.push(Promise.resolve().then(()=>loadAdminGallery()));
     if(p.demo_visitors===true||isMaster) tasks.push(Promise.resolve().then(()=>loadDemoVisitors()));
+    if(p.view_spinner_results===true||isMaster) tasks.push(Promise.resolve().then(()=>loadSpinnerResults()));
     if(p.sponsor_slots===true||isMaster) tasks.push(Promise.resolve().then(()=>loadSponsorSlots()));
 
     const results=await Promise.allSettled(tasks);
@@ -1500,6 +1519,33 @@ async function loadAdminGallery(){
   }
 }
 
+async function loadSpinnerResults(){
+  const status=$("spinnerResultsStatus");
+  const realTable=$("realSpinnerResultsTable");
+  const demoTable=$("demoSpinnerResultsTable");
+  status.className="status";
+  status.textContent="Loading spinner results...";
+  realTable.innerHTML="";
+  demoTable.innerHTML="";
+  try{
+    const r=await adminCall("list_spinner_results");
+    const real=r.real_spins||[];
+    const demo=r.demo_spins||[];
+    const fmtSlot=v=>v==null?"Not recorded (older spin)":`Slot ${Number(v)}`;
+    const fmtDate=v=>v?new Date(v).toLocaleString():"—";
+    realTable.innerHTML=real.length
+      ? '<div style="overflow:auto"><table class="table"><tr><th>Member</th><th>Date / Time</th><th>Friday</th><th>Landed Slot</th><th>Prize Points</th></tr>'+real.map(x=>`<tr><td><b>${esc(x.driver?.display_name||x.driver?.trucksbook_username||"Unknown driver")}</b><div class="small">${esc(x.driver?.trucksbook_username||"")}</div></td><td>${esc(fmtDate(x.created_at))}</td><td>${esc(x.friday_key||"—")}</td><td><b>${esc(fmtSlot(x.slot_index))}</b></td><td>${Number(x.prize)||0}</td></tr>`).join("")+'</table></div>'
+      : '<div class="small">No real member spins found.</div>';
+    demoTable.innerHTML=demo.length
+      ? '<div style="overflow:auto"><table class="table"><tr><th>Visitor</th><th>Date / Time</th><th>Demo Spin</th><th>Landed Slot</th><th>Prize Points</th></tr>'+demo.map(x=>`<tr><td><b>${esc(x.visitor_name||"Unnamed visitor")}</b></td><td>${esc(fmtDate(x.created_at))}</td><td>${Number(x.spin_number)||0}/5</td><td><b>${esc(fmtSlot(x.slot_index))}</b></td><td>0 (demo)</td></tr>`).join("")+'</table></div>'
+      : '<div class="small">No named public demo spins found.</div>';
+    status.textContent=`Loaded ${real.length} real member spin${real.length===1?'':'s'} and ${demo.length} named demo spin${demo.length===1?'':'s'}.`;
+  }catch(e){
+    status.className="status error";
+    status.textContent=e.message||"Unable to load spinner results.";
+  }
+}
+
 async function loadDemoVisitors(){
   const status=$("demoVisitorsStatus");
   const table=$("demoVisitorsTable");
@@ -1578,6 +1624,7 @@ async function applyDemoVisitorRetention(){
 }
 
 $("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
+$("spinnerResultsRefresh").onclick=()=>loadSpinnerResults();
 $("demoVisitorsApplyRetention").onclick=()=>applyDemoVisitorRetention();
 
 $("galleryRefresh").onclick=()=>loadAdminGallery();
