@@ -92,6 +92,17 @@
     <div id="anytimeResultsBox" style="display:none;margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
       <h4>Participant Results</h4>
       <div id="anytimeResultsSummary" class="small"></div>
+      <div id="anytimeRetentionControl" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#0a0f17">
+        <label for="anytimeRetainCount" class="small" style="display:block;font-weight:800">Minimum participant results to retain</label>
+        <select id="anytimeRetainCount" class="input" style="max-width:260px;margin-top:6px">
+          <option value="10">Keep at least 10 results</option>
+          <option value="15" selected>Keep at least 15 results</option>
+          <option value="20">Keep at least 20 results</option>
+          <option value="25">Keep at least 25 results</option>
+          <option value="30">Keep at least 30 results</option>
+        </select>
+        <div class="small" style="margin-top:6px">Secondary admins cannot delete the newest selected number of results. The server enforces this minimum.</div>
+      </div>
       <div id="anytimeResultsTable" style="overflow:auto"></div>
       <h4 style="margin-top:18px">Publish Winner</h4>
       <input id="anytimeWinnerName" class="input" maxlength="120" placeholder="Winner's name">
@@ -441,6 +452,11 @@ let anytimeSelectedRaffleId = null;
 let anytimeResultsRows = [];
 let anytimeResultsCurrentPage = 1;
 const ANYTIME_RESULTS_PAGE_SIZE = 10;
+const ANYTIME_RETENTION_OPTIONS = [10,15,20,25,30];
+function anytimeRetainCount(){
+  const n=Number($('anytimeRetainCount')?.value||15);
+  return ANYTIME_RETENTION_OPTIONS.includes(n)?n:15;
+}
 function anytimeStatus(message, bad=false){ const el=$("anytimeAdminStatus"); if(el){el.textContent=message;el.style.color=bad?'#ff9ba0':'#cbd6e4';} }
 function anytimePublicStatus(message, bad=false){ const el=$("anytimePublicStatus"); if(el){el.textContent=message;el.style.color=bad?'#ff9ba0':'#cbd6e4';} }
 async function renderAnytimePublicResults(client, raffle){
@@ -531,6 +547,7 @@ async function loadAnytimeAdmin(){
     anytimeStatus(`${raffles.length} raffle record(s) loaded.`);
   }catch(e){anytimeStatus(e.message||'Unable to load Anytime raffles.',true);}
 }
+$('anytimeRetainCount')?.addEventListener('change',()=>renderAnytimeResultsPage());
 function renderAnytimeResultsPage(){
   const table=$('anytimeResultsTable');
   const rows=anytimeResultsRows||[];
@@ -542,7 +559,8 @@ function renderAnytimeResultsPage(){
   const canDelete=hasPermission('delete_anytime_spin_results');
   const htmlRows=pageRows.map((x,i)=>{
     const globalIndex=start+i;
-    const protectedRow=!isMaster&&globalIndex<15;
+    const retainCount=anytimeRetainCount();
+    const protectedRow=!isMaster&&globalIndex<retainCount;
     let action='—';
     if(canDelete){
       action=protectedRow
@@ -551,6 +569,8 @@ function renderAnytimeResultsPage(){
     }
     return `<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${Number(x.result_slot_number)}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
   }).join('');
+  const retentionControl=$('anytimeRetentionControl');
+  if(retentionControl)retentionControl.style.display=canDelete&&!isMaster?'block':'none';
   table.innerHTML=rows.length
     ? `<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th><th>Action</th></tr>${htmlRows}</table>
        <div class="anytime-pagination"><span class="small">Showing ${start+1}–${Math.min(start+ANYTIME_RESULTS_PAGE_SIZE,rows.length)} of ${rows.length} results • Page ${anytimeResultsCurrentPage} of ${totalPages}</span><div style="display:flex;gap:8px"><button type="button" id="anytimeResultsPrev" ${anytimeResultsCurrentPage<=1?'disabled':''}>PREVIOUS</button><button type="button" id="anytimeResultsNext" ${anytimeResultsCurrentPage>=totalPages?'disabled':''}>NEXT</button></div></div>`
@@ -564,7 +584,7 @@ function renderAnytimeResultsPage(){
     if(!confirm(`Permanently delete the result for ${row.participant_name}? This cannot be undone.`))return;
     btn.disabled=true;btn.textContent='DELETING...';
     try{
-      await adminCall('delete_anytime_spin_result',{result_id:resultId,raffle_id:anytimeSelectedRaffleId});
+      await adminCall('delete_anytime_spin_result',{result_id:resultId,raffle_id:anytimeSelectedRaffleId,retain_count:anytimeRetainCount()});
       anytimeStatus(`Deleted the result for ${row.participant_name}.`);
       await loadAnytimeResults(anytimeSelectedRaffleId);
       await loadAnytimePublic();
@@ -591,7 +611,7 @@ async function loadAnytimeResults(raffleId){
     $('anytimeWinnerPrize').style.display=canManage?'block':'none';
     $('anytimeWinnerNote').style.display=canManage?'block':'none';
     $('anytimePublishWinnerBtn').style.display=canManage?'block':'none';
-    anytimeStatus('Results loaded. Newest 15 results are protected from secondary-admin deletion. Close the raffle before publishing the winner.');
+    anytimeStatus(`Results loaded. The newest ${anytimeRetainCount()} results are protected from secondary-admin deletion. Close the raffle before publishing the winner.`);
   }catch(e){anytimeStatus(e.message||'Unable to load results.',true);}
 }
 $('anytimeCreateBtn')?.addEventListener('click',async()=>{if(!hasPermission('sponsor_slots')){anytimeStatus('Permission required: Sponsor Slots.',true);return;}const slot_number=Number($('anytimeSlotSelect').value);if(!slot_number){anytimeStatus('Choose a sponsor slot first.',true);return;}try{$('anytimeCreateBtn').disabled=true;await adminCall('create_anytime_raffle',{slot_number});anytimeStatus('Draft raffle created from the selected sponsor slot.');await loadAnytimeAdmin();}catch(e){anytimeStatus(e.message||'Unable to create raffle.',true);}finally{$('anytimeCreateBtn').disabled=false;}});
