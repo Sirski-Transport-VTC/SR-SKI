@@ -110,6 +110,8 @@
       <input id="anytimeWinnerPrize" class="input" maxlength="300" placeholder="Gift / prize awarded">
       <textarea id="anytimeWinnerNote" class="input" maxlength="2000" rows="3" placeholder="Announcement note (optional)"></textarea>
       <button id="anytimePublishWinnerBtn" class="btn" type="button">PUBLISH WINNER ANNOUNCEMENT</button>
+       <button id="anytimeClearWinnerBtn" class="btn secondary" type="button" style="background:#7f1d1d;color:#fff">CLEAR WINNER ANNOUNCEMENT</button>
+       <div class="small">Clearing removes the public announcement only. The raffle and participant results remain unchanged.</div>
     </div>
   </div>
   <div id="demoVisitorsAdminBox" class="admin-box" style="display:none"><h4>👥 Demo Visitors</h4><div class="small">View named public demo users. Blank-name demo spins are not recorded.</div><div id="demoVisitorsStatus" class="status"></div><div id="demoVisitorsTable"></div><button id="demoVisitorsRefresh" class="btn secondary">REFRESH VISITORS</button></div>
@@ -479,7 +481,7 @@ async function loadAnytimePublic(){
     const {data:winners,error:winnerError}=await client.from('anytime_winner_announcements').select('raffle_id,winner_name,prize_text,announcement_note,published_at').eq('published',true).order('published_at',{ascending:false}).limit(1);
     if(winnerError) throw winnerError;
     const winner=(winners||[])[0];
-    if(winner){$('anytimeWinnerPublic').style.display='block';$('anytimeWinnerPublicText').textContent=`${winner.winner_name} — ${winner.prize_text}${winner.announcement_note?'\n'+winner.announcement_note:''}`;}
+    if(winner){$('anytimeWinnerPublic').style.display='block';$('anytimeWinnerPublicText').textContent=`${winner.winner_name} — ${winner.prize_text}${winner.announcement_note?'\n'+winner.announcement_note:''}`;}else{$('anytimeWinnerPublic').style.display='none';$('anytimeWinnerPublicText').textContent='';}
     if(!raffle){
       const {data:closedRaffles,error:closedError}=await client.from('anytime_raffles').select('id,target_slot_number,prize_text,sponsor_name,status,created_at').eq('status','closed').order('closed_at',{ascending:false}).limit(1);
       if(closedError) throw closedError;
@@ -629,6 +631,7 @@ async function loadAnytimeResults(raffleId){
 }
 $('anytimeCreateBtn')?.addEventListener('click',async()=>{if(!hasPermission('sponsor_slots')){anytimeStatus('Permission required: Sponsor Slots.',true);return;}const slot_number=Number($('anytimeSlotSelect').value);if(!slot_number){anytimeStatus('Choose a sponsor slot first.',true);return;}try{$('anytimeCreateBtn').disabled=true;await adminCall('create_anytime_raffle',{slot_number});anytimeStatus('Draft raffle created from the selected sponsor slot.');await loadAnytimeAdmin();}catch(e){anytimeStatus(e.message||'Unable to create raffle.',true);}finally{$('anytimeCreateBtn').disabled=false;}});
 $('anytimePublishWinnerBtn')?.addEventListener('click',async()=>{if(!hasPermission('sponsor_slots')){anytimeStatus('Permission required: Sponsor Slots.',true);return;}if(!anytimeSelectedRaffleId){anytimeStatus('Select a raffle and view its results first.',true);return;}const winner_name=$('anytimeWinnerName').value.trim(),prize_text=$('anytimeWinnerPrize').value.trim(),announcement_note=$('anytimeWinnerNote').value.trim();if(!winner_name||!prize_text){anytimeStatus('Enter the winner name and prize.',true);return;}if(!confirm(`Publish ${winner_name} as the winner?`))return;try{await adminCall('publish_anytime_winner',{raffle_id:anytimeSelectedRaffleId,winner_name,prize_text,announcement_note});anytimeStatus('Winner announcement published.');await loadAnytimePublic();}catch(e){anytimeStatus(e.message||'Unable to publish winner.',true);}});
+$('anytimeClearWinnerBtn')?.addEventListener('click',async()=>{if(!hasPermission('sponsor_slots')){anytimeStatus('Permission required: Sponsor Slots.',true);return;}if(!anytimeSelectedRaffleId){anytimeStatus('Select a raffle and view its results first.',true);return;}if(!confirm('Clear the published winner announcement for this raffle? This only removes the public announcement. The raffle and participant results will remain.'))return;try{$('anytimeClearWinnerBtn').disabled=true;anytimeStatus('Clearing winner announcement...');await adminCall('clear_anytime_winner',{raffle_id:anytimeSelectedRaffleId});anytimeStatus('Winner announcement cleared. The raffle and participant results were kept.');await loadAnytimePublic();}catch(e){anytimeStatus(e.message||'Unable to clear winner announcement.',true);}finally{$('anytimeClearWinnerBtn').disabled=false;}});
 $('sponsorRefresh')?.addEventListener('click',()=>loadAnytimeAdmin());
 $("adminLoginBtn").onclick=async()=>{try{adminStatus('adminStatus','Signing in...');const client=await getSB();const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(error)throw error;await loadAdmin();adminStatus('adminStatus','')}catch(e){adminStatus('adminStatus',e.message,true)}};
 $("logout").onclick=async()=>{try{const client=await getSB();await client.auth.signOut()}finally{location.href="../member-login.html"}};
