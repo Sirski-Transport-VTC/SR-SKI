@@ -485,10 +485,20 @@ $('anytimeSpinBtn')?.addEventListener('click',async()=>{
     const {data,error}=await client.functions.invoke('anytime-spin',{body:{participant_name:name}});
     if(error){let msg=error.message||'Spin request failed.';try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}throw new Error(msg);}
     if(data?.error)throw new Error(data.error);
-    $('anytimeResultSlot').textContent=`SLOT ${data.result_slot_number}`;
-    $('anytimeResultText').textContent=data.hit_target?`You landed on the sponsor target slot! This result is recorded, but the winner will be announced by the admin after reviewing all results.`:`Your result has been recorded. The target sponsor slot was ${data.target_slot_number}; the admin will review all results before announcing the winner.`;
-    $('anytimeSpinResult').style.display='block';
-    anytimePublicStatus('Your result was recorded successfully.');
+    const resultSlot = Number(data.result_slot_number);
+    if (!Number.isInteger(resultSlot) || resultSlot < 1 || resultSlot > 21) {
+      throw new Error('The server returned an invalid wheel result.');
+    }
+    // Animate the shared wheel to the exact slot returned by the server.
+    // The spin is already recorded server-side; animation only displays that result.
+    spinAnimation(resultSlot - 1, () => {
+      $('anytimeResultSlot').textContent=`SLOT ${resultSlot}`;
+      $('anytimeResultText').textContent=data.hit_target
+        ? `You landed on the sponsor target slot! This result is recorded, but the winner will be announced by the admin after reviewing all results.`
+        : `Your result has been recorded. The target sponsor slot was ${data.target_slot_number}; the admin will review all results before announcing the winner.`;
+      $('anytimeSpinResult').style.display='block';
+      anytimePublicStatus('Your result was recorded successfully.');
+    });
   }catch(e){anytimePublicStatus(e.message||'Unable to record the spin.',true);}
   finally{btn.disabled=false;}
 });
