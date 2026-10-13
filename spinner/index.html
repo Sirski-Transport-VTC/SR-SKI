@@ -200,15 +200,16 @@ function spinAnimation(target,onDone){
   const slotAngle=target<20?(target*17.9104477612)+(17.9104477612/2):358.2089552239+(1.7910447761/2);
   const desired=-slotAngle;
   let delta=((desired-(currentRotation%360))+360)%360;
-  // One continuous animation: many full turns followed by a smooth, uninterrupted deceleration.
-  delta += 7*360;
+  // Keep several full turns, then land exactly on the server-selected slot.
+  delta += 8*360;
   const start=currentRotation;
   const total=start+delta;
-  const duration=10000;
+  const duration=25000; // 25 seconds: super-fast start, sustained fast spin, then long smooth slowdown.
   const started=performance.now();
   function frame(now){
     const elapsed=Math.min(now-started,duration);
     const t=elapsed/duration;
+    // Cubic ease-out starts very fast and continuously decelerates without pauses or speed jumps.
     const eased=1-Math.pow(1-t,3);
     const angle=start+delta*eased;
     $('wheel').style.transform=`rotate(${angle}deg)`;
