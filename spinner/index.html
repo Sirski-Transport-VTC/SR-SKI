@@ -42,6 +42,31 @@
   </div>
 </section>
 
+<section class="discord-hub" id="anytimeSpinSection" aria-labelledby="anytimeSpinTitle">
+  <h3 id="anytimeSpinTitle">🎁 ANYTIME SPONSOR SPIN</h3>
+  <p id="anytimeSpinIntro">A separate sponsor raffle. Each spin is recorded, but landing on the sponsor slot does not automatically declare a winner. The admin reviews the results and publishes the final winner.</p>
+  <div id="anytimePublicStatus" class="status" aria-live="polite">Checking for an active sponsor raffle…</div>
+  <div id="anytimeActiveRaffle" style="display:none;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px;background:#0a0f17">
+    <div id="anytimePrizeTitle" style="font-weight:900;color:var(--gold);font-size:18px"></div>
+    <div id="anytimeSponsorTitle" class="small" style="margin-top:4px"></div>
+    <input id="anytimeParticipantName" class="input" maxlength="120" autocomplete="name" placeholder="Enter your name to record your spin">
+    <button id="anytimeSpinBtn" class="btn" type="button">SPIN FOR SPONSOR GIFT</button>
+    <div id="anytimeSpinResult" class="result" style="display:none">
+      <div class="small">YOUR ANYTIME SPIN RESULT</div>
+      <div id="anytimeResultSlot" class="num">—</div>
+      <div id="anytimeResultText"></div>
+    </div>
+  </div>
+  <div id="anytimePublicResults" style="display:none;margin-top:14px">
+    <div style="font-weight:900;margin-bottom:6px">📋 Recorded Participant Results</div>
+    <div id="anytimePublicResultsTable" style="overflow:auto"></div>
+  </div>
+  <div id="anytimeWinnerPublic" style="display:none;border:1px solid #665313;border-radius:14px;padding:16px;margin-top:14px;background:#17130a">
+    <div style="font-weight:900;color:var(--gold);font-size:17px">🏆 WINNER ANNOUNCEMENT</div>
+    <div id="anytimeWinnerPublicText" style="margin-top:8px;line-height:1.6"></div>
+  </div>
+</section>
+
 <section id="admin" class="admin card">
 <div class="adminbar"><div><h3 style="margin:0">Sirski Transport Admin Dashboard</h3><div class="small">Manage drivers, member logins, passwords, and Friday Spinner accounts from one page.</div></div><div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a id="backToSpinnerBtn" class="back-main" href="#top" style="margin-top:0">← BACK TO SPINNER</a><a class="back-main" href="https://sirski-transport.com/admin.html" style="margin-top:0">MEMBER ADMIN</a><a id="adminDashboardBtn2" class="back-main" href="#admin" style="margin-top:0">ADMIN DASHBOARD</a><button id="logout" class="btn secondary" style="width:auto;padding:10px 14px;margin-top:0">LOG OUT</button></div></div>
 <div id="adminLogin"><input id="adminEmail" class="input" placeholder="Admin email" autocomplete="username"><input id="adminPassword" class="input" type="password" placeholder="Admin password" autocomplete="current-password"><button id="adminLoginBtn" class="btn">ADMIN SIGN IN</button><div id="adminStatus" class="status"></div></div>
@@ -56,6 +81,25 @@
 </div>
 <div id="spinnerExtraAdmin" style="display:none;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:16px;margin-top:16px">
   <div id="sponsorSlotsAdminBox" class="admin-box" style="display:none"><h4>🎁 Sponsor Slots</h4><div class="small">Edit the gift/prize description and sponsor name for the 10 permanent sponsor slots.</div><div id="sponsorStatus" class="status"></div><div id="sponsorAdminGrid"></div><button id="sponsorRefresh" class="btn secondary">REFRESH SPONSORS</button></div>
+  <div id="anytimeAdminBox" class="admin-box" style="display:none;grid-column:1/-1">
+    <h4>🎁 Anytime Sponsor Spin Management</h4>
+    <div class="small">Create a raffle from an existing sponsor slot, activate it, review every recorded result, close it, then publish the winner. This is separate from Friday Spinner.</div>
+    <div id="anytimeAdminStatus" class="status" aria-live="polite"></div>
+    <label class="small" for="anytimeSlotSelect">Sponsor slot to raffle</label>
+    <select id="anytimeSlotSelect" class="input"></select>
+    <button id="anytimeCreateBtn" class="btn" type="button">CREATE DRAFT RAFFLE FROM SLOT</button>
+    <div id="anytimeRaffleList" style="margin-top:12px"></div>
+    <div id="anytimeResultsBox" style="display:none;margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
+      <h4>Participant Results</h4>
+      <div id="anytimeResultsSummary" class="small"></div>
+      <div id="anytimeResultsTable" style="overflow:auto"></div>
+      <h4 style="margin-top:18px">Publish Winner</h4>
+      <input id="anytimeWinnerName" class="input" maxlength="120" placeholder="Winner's name">
+      <input id="anytimeWinnerPrize" class="input" maxlength="300" placeholder="Gift / prize awarded">
+      <textarea id="anytimeWinnerNote" class="input" maxlength="2000" rows="3" placeholder="Announcement note (optional)"></textarea>
+      <button id="anytimePublishWinnerBtn" class="btn" type="button">PUBLISH WINNER ANNOUNCEMENT</button>
+    </div>
+  </div>
   <div id="demoVisitorsAdminBox" class="admin-box" style="display:none"><h4>👥 Demo Visitors</h4><div class="small">View named public demo users. Blank-name demo spins are not recorded.</div><div id="demoVisitorsStatus" class="status"></div><div id="demoVisitorsTable"></div><button id="demoVisitorsRefresh" class="btn secondary">REFRESH VISITORS</button></div>
   <div id="memberGalleryAdminBox" class="admin-box" style="display:none;grid-column:1/-1"><h4>📸 Member Gallery</h4><div class="small">View screenshots uploaded by Sirski members and delete screenshots when required.</div><div id="adminGalleryStatus" class="status"></div><div id="adminGalleryGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px"></div><div id="adminGalleryEmpty" class="small"></div><button id="galleryRefresh" class="btn secondary">REFRESH GALLERY</button></div>
 </div>
@@ -348,7 +392,7 @@ function applySpinnerAdminPermissions(){
     $('accountsListDesc').textContent=driver?'Full driver management including active status, points, and member-login links.':'Member records available for member-login management.';
   }
   $('spinnerExtraAdmin').style.display=(sponsor||gallery||demo)?'grid':'none';
-  show('sponsorSlotsAdminBox',sponsor);show('demoVisitorsAdminBox',demo);show('memberGalleryAdminBox',gallery);
+  show('sponsorSlotsAdminBox',sponsor);show('anytimeAdminBox',sponsor);show('demoVisitorsAdminBox',demo);show('memberGalleryAdminBox',gallery);
   return any;
 }
 function renderMemberAccounts(){
@@ -379,7 +423,7 @@ async function loadAdmin(){
       const m=await adminCall('list_member_accounts');adminDrivers=m.members||[];renderMemberAccounts();populateAdminSelectors();$('stats').innerHTML=`Member records available: <b>${adminDrivers.length}</b>`;
     } else $('stats').innerHTML='';
     if(member||reset||link)populateAdminSelectors();
-    if(sponsor)await loadSponsorSlots();
+    if(sponsor){await loadSponsorSlots();await loadAnytimeAdmin();}
     if(demo)await loadDemoVisitors();
     if(gallery)await loadAdminGallery();
   }catch(e){$('adminPanel').style.display='none';adminStatus('adminStatus',e.message,true);throw e}
@@ -389,6 +433,97 @@ async function loadSponsorSlots(){
   try{const r=await adminCall('list_sponsor_slots');const data=r.slots||[];for(let n=1;n<=10;n++){const row=data.find(x=>Number(x.slot_number)===n)||{slot_number:n,prize_text:'',sponsor_name:''};const wrap=document.createElement('div');wrap.style.cssText='border-top:1px solid rgba(255,255,255,.08);padding:10px 0';wrap.innerHTML=`<div class="small"><b>SLOT ${String(n).padStart(2,'0')}</b></div><input class="input sponsor-prize" maxlength="120" value="${escapeHtml(row.prize_text||'')}" placeholder="Gift / Prize Description"><input class="input sponsor-name" maxlength="80" value="${escapeHtml(row.sponsor_name||'')}" placeholder="Sponsor Name"><button class="btn sponsor-save" type="button">SAVE</button>`;wrap.querySelector('.sponsor-save').onclick=async()=>{const b=wrap.querySelector('.sponsor-save');b.disabled=true;b.textContent='SAVING...';try{await adminCall('save_sponsor_slot',{slot_number:n,prize_text:wrap.querySelector('.sponsor-prize').value.trim(),sponsor_name:wrap.querySelector('.sponsor-name').value.trim()});status.textContent=`Slot ${String(n).padStart(2,'0')} saved successfully.`}catch(e){status.textContent=e.message||'Unable to save sponsor slot.'}finally{b.disabled=false;b.textContent='SAVE'}};grid.appendChild(wrap)}status.textContent='Sponsor slots loaded.'}catch(e){status.textContent=e.message||'Unable to load sponsor slots.'}}
 async function loadDemoVisitors(){const status=$('demoVisitorsStatus');const table=$('demoVisitorsTable');status.textContent='Loading demo visitors...';table.innerHTML='';try{const r=await adminCall('list_demo_visitors');const v=r.visitors||[];if(!v.length){status.textContent='No named public demo visitors yet.';return}table.innerHTML='<div style="overflow:auto"><table class="table"><tr><th>Visitor</th><th>Date / Time</th><th>Spin</th></tr>'+v.map(x=>`<tr><td><b>${escapeHtml(x.visitor_name)}</b></td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${Number(x.spin_number)||0}/5</td></tr>`).join('')+'</table></div>';status.textContent=`${v.length} named demo use${v.length===1?'':'s'} recorded.`}catch(e){status.textContent=e.message||'Unable to load demo visitors.'}}
 async function loadAdminGallery(){const status=$('adminGalleryStatus'),grid=$('adminGalleryGrid'),empty=$('adminGalleryEmpty');status.textContent='Loading gallery...';grid.innerHTML='';empty.textContent='';try{const r=await adminCall('list_gallery');const data=r.gallery||[];if(!data.length){empty.textContent='No member screenshots have been uploaded yet.';return}for(const row of data){const card=document.createElement('div');card.style.cssText='border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;background:rgba(0,0,0,.18)';card.innerHTML=`<img src="${escapeHtml(row.public_url||'')}" alt="Sirski member screenshot" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"><div style="padding:10px"><div><b>${escapeHtml(row.caption||'Sirski Transport screenshot')}</b></div><div class="small">Uploader: ${escapeHtml(row.uploader_name||'Sirski Member')}<br>Uploaded: ${escapeHtml(new Date(row.created_at).toLocaleString())}</div><button class="btn secondary gallery-delete" type="button" style="margin-top:10px">DELETE SCREENSHOT</button></div>`;card.querySelector('.gallery-delete').onclick=async()=>{if(!confirm('Delete this member screenshot?'))return;const b=card.querySelector('.gallery-delete');b.disabled=true;b.textContent='DELETING...';try{await adminCall('delete_gallery',{id:row.id});status.textContent='Screenshot deleted.';await loadAdminGallery()}catch(e){b.disabled=false;b.textContent='DELETE SCREENSHOT';status.textContent=e.message||'Unable to delete screenshot.'}};grid.appendChild(card)}}catch(e){status.textContent=e.message||'Unable to load member gallery.'}}
+// Anytime Sponsor Spin: separate public Edge Function and independent database records.
+let anytimeActiveRaffle = null;
+let anytimeSelectedRaffleId = null;
+function anytimeStatus(message, bad=false){ const el=$("anytimeAdminStatus"); if(el){el.textContent=message;el.style.color=bad?'#ff9ba0':'#cbd6e4';} }
+function anytimePublicStatus(message, bad=false){ const el=$("anytimePublicStatus"); if(el){el.textContent=message;el.style.color=bad?'#ff9ba0':'#cbd6e4';} }
+async function renderAnytimePublicResults(client, raffle){
+  const wrap=$('anytimePublicResults'), table=$('anytimePublicResultsTable');
+  try{
+    const {data,error}=await client.from('anytime_spin_results').select('participant_name,result_slot_number,hit_target,created_at').eq('raffle_id',raffle.id).order('created_at',{ascending:false}).limit(300);
+    if(error) throw error;
+    const rows=data||[];
+    wrap.style.display='block';
+    table.innerHTML=rows.length?'<table class="table"><tr><th>Participant</th><th>Result</th><th>Target hit?</th><th>Date / Time</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${x.hit_target?'Yes':'No'}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No spins have been recorded for this raffle yet.</div>';
+  }catch(e){wrap.style.display='block';table.textContent=e.message||'Unable to load participant results.';}
+}
+async function loadAnytimePublic(){
+  try{
+    const client=await getSB();
+    const {data:raffles,error}=await client.from('anytime_raffles').select('id,target_slot_number,prize_text,sponsor_name,status,created_at').eq('status','active').order('activated_at',{ascending:false}).limit(1);
+    if(error) throw error;
+    const raffle=(raffles||[])[0];
+    const {data:winners,error:winnerError}=await client.from('anytime_winner_announcements').select('raffle_id,winner_name,prize_text,announcement_note,published_at').eq('published',true).order('published_at',{ascending:false}).limit(1);
+    if(winnerError) throw winnerError;
+    const winner=(winners||[])[0];
+    if(winner){$('anytimeWinnerPublic').style.display='block';$('anytimeWinnerPublicText').textContent=`${winner.winner_name} — ${winner.prize_text}${winner.announcement_note?'\n'+winner.announcement_note:''}`;}
+    if(!raffle){
+      const {data:closedRaffles,error:closedError}=await client.from('anytime_raffles').select('id,target_slot_number,prize_text,sponsor_name,status,created_at').eq('status','closed').order('closed_at',{ascending:false}).limit(1);
+      if(closedError) throw closedError;
+      const previous=(closedRaffles||[])[0];
+      $('anytimeActiveRaffle').style.display='none';
+      if(previous){await renderAnytimePublicResults(client,previous);anytimePublicStatus('There is no active raffle right now. The most recent raffle results are shown below.');}
+      else anytimePublicStatus('There is no active sponsor raffle right now. Please check again later.');
+      return;
+    }
+    anytimeActiveRaffle=raffle;
+    $('anytimePrizeTitle').textContent=raffle.prize_text;
+    $('anytimeSponsorTitle').textContent=`Sponsor: ${raffle.sponsor_name||'Sirski Transport'} • Target sponsor slot ${raffle.target_slot_number}`;
+    $('anytimeActiveRaffle').style.display='block';
+    anytimePublicStatus('Raffle is active. Enter your name and spin. Every result is recorded; the final winner is confirmed by an admin.');
+    await renderAnytimePublicResults(client,raffle);
+  }catch(e){anytimePublicStatus(e.message||'Unable to load the sponsor raffle.',true);}
+}
+$('anytimeSpinBtn')?.addEventListener('click',async()=>{
+  const name=$('anytimeParticipantName').value.trim();
+  if(!name){anytimePublicStatus('Please enter your name so your result can be recorded.',true);return;}
+  if(!anytimeActiveRaffle){anytimePublicStatus('No active raffle is available.',true);return;}
+  const btn=$('anytimeSpinBtn');btn.disabled=true;$('anytimeSpinResult').style.display='none';anytimePublicStatus('Spinning and recording your result…');
+  try{
+    const client=await getSB();
+    const {data,error}=await client.functions.invoke('anytime-spin',{body:{participant_name:name}});
+    if(error){let msg=error.message||'Spin request failed.';try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}throw new Error(msg);}
+    if(data?.error)throw new Error(data.error);
+    $('anytimeResultSlot').textContent=`SLOT ${data.result_slot_number}`;
+    $('anytimeResultText').textContent=data.hit_target?`You landed on the sponsor target slot! This result is recorded, but the winner will be announced by the admin after reviewing all results.`:`Your result has been recorded. The target sponsor slot was ${data.target_slot_number}; the admin will review all results before announcing the winner.`;
+    $('anytimeSpinResult').style.display='block';
+    anytimePublicStatus('Your result was recorded successfully.');
+  }catch(e){anytimePublicStatus(e.message||'Unable to record the spin.',true);}
+  finally{btn.disabled=false;}
+});
+async function loadAnytimeAdmin(){
+  const list=$('anytimeRaffleList');if(!list)return;
+  list.innerHTML='';anytimeStatus('Loading Anytime raffles…');
+  try{
+    const r=await adminCall('list_anytime_raffles');const raffles=r.raffles||[];
+    const slots=await adminCall('list_sponsor_slots');
+    $('anytimeSlotSelect').innerHTML=(slots.slots||[]).map(s=>`<option value="${Number(s.slot_number)}">Slot ${String(s.slot_number).padStart(2,'0')} — ${escapeHtml(s.prize_text||'(no prize saved)')} ${s.sponsor_name?'('+escapeHtml(s.sponsor_name)+')':''}</option>`).join('');
+    if(!raffles.length){list.innerHTML='<div class="small">No Anytime raffle has been created yet.</div>';anytimeStatus('Ready. Choose a saved sponsor slot to create a draft.');return;}
+    for(const raffle of raffles){
+      const card=document.createElement('div');card.style.cssText='border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#0a0f17';
+      card.innerHTML=`<div style="font-weight:900">${escapeHtml(raffle.prize_text)} — Slot ${raffle.target_slot_number}</div><div class="small">Sponsor: ${escapeHtml(raffle.sponsor_name||'Sirski Transport')} • Status: <b>${escapeHtml(raffle.status)}</b> • Created: ${escapeHtml(new Date(raffle.created_at).toLocaleString())}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn secondary anytime-results" type="button" style="width:auto;margin-top:0">VIEW RESULTS</button>${raffle.status==='draft'?'<button class="btn anytime-activate" type="button" style="width:auto;margin-top:0">ACTIVATE</button>':''}${raffle.status==='active'?'<button class="btn secondary anytime-close" type="button" style="width:auto;margin-top:0">CLOSE RAFFLE</button>':''}</div>`;
+      card.querySelector('.anytime-results').onclick=()=>loadAnytimeResults(raffle.id);
+      card.querySelector('.anytime-activate')?.addEventListener('click',async()=>{if(!confirm('Activate this Anytime Sponsor Spin raffle? Only one raffle can be active at a time.'))return;try{await adminCall('set_anytime_raffle_status',{raffle_id:raffle.id,status:'active'});anytimeStatus('Raffle activated.');await loadAnytimeAdmin();await loadAnytimePublic();}catch(e){anytimeStatus(e.message,true);}});
+      card.querySelector('.anytime-close')?.addEventListener('click',async()=>{if(!confirm('Close this raffle? Participants will no longer be able to spin.'))return;try{await adminCall('set_anytime_raffle_status',{raffle_id:raffle.id,status:'closed'});anytimeStatus('Raffle closed.');await loadAnytimeAdmin();await loadAnytimePublic();}catch(e){anytimeStatus(e.message,true);}});
+      list.appendChild(card);
+    }
+    anytimeStatus(`${raffles.length} raffle record(s) loaded.`);
+  }catch(e){anytimeStatus(e.message||'Unable to load Anytime raffles.',true);}
+}
+async function loadAnytimeResults(raffleId){
+  anytimeSelectedRaffleId=raffleId;$('anytimeResultsBox').style.display='block';$('anytimeResultsTable').innerHTML='';
+  try{
+    const r=await adminCall('list_anytime_results',{raffle_id:raffleId});const raffle=r.raffle;const results=r.results||[];
+    $('anytimeResultsSummary').textContent=`${results.length} recorded spin(s). Target: Slot ${raffle.target_slot_number} — ${raffle.prize_text}. Results include both hits and misses.`;
+    $('anytimeResultsTable').innerHTML=results.length?'<table class="table"><tr><th>Participant</th><th>Result</th><th>Target hit?</th><th>Date / Time</th></tr>'+results.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${x.hit_target?'<span class="pill">Yes</span>':'<span class="pill off">No</span>'}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No participants recorded yet.</div>';
+    $('anytimeWinnerPrize').value=raffle.prize_text;
+    anytimeStatus('Results loaded. Close the raffle before publishing the winner.');
+  }catch(e){anytimeStatus(e.message||'Unable to load results.',true);}
+}
+$('anytimeCreateBtn')?.addEventListener('click',async()=>{const slot_number=Number($('anytimeSlotSelect').value);if(!slot_number){anytimeStatus('Choose a sponsor slot first.',true);return;}try{$('anytimeCreateBtn').disabled=true;await adminCall('create_anytime_raffle',{slot_number});anytimeStatus('Draft raffle created from the selected sponsor slot.');await loadAnytimeAdmin();}catch(e){anytimeStatus(e.message||'Unable to create raffle.',true);}finally{$('anytimeCreateBtn').disabled=false;}});
+$('anytimePublishWinnerBtn')?.addEventListener('click',async()=>{if(!anytimeSelectedRaffleId){anytimeStatus('Select a raffle and view its results first.',true);return;}const winner_name=$('anytimeWinnerName').value.trim(),prize_text=$('anytimeWinnerPrize').value.trim(),announcement_note=$('anytimeWinnerNote').value.trim();if(!winner_name||!prize_text){anytimeStatus('Enter the winner name and prize.',true);return;}if(!confirm(`Publish ${winner_name} as the winner?`))return;try{await adminCall('publish_anytime_winner',{raffle_id:anytimeSelectedRaffleId,winner_name,prize_text,announcement_note});anytimeStatus('Winner announcement published.');await loadAnytimePublic();}catch(e){anytimeStatus(e.message||'Unable to publish winner.',true);}});
+$('sponsorRefresh')?.addEventListener('click',()=>loadAnytimeAdmin());
 $("adminLoginBtn").onclick=async()=>{try{adminStatus('adminStatus','Signing in...');const client=await getSB();const {error}=await client.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(error)throw error;await loadAdmin();adminStatus('adminStatus','')}catch(e){adminStatus('adminStatus',e.message,true)}};
 $("logout").onclick=async()=>{try{const client=await getSB();await client.auth.signOut()}finally{location.href="../member-login.html"}};
 $("addDriver").onclick=async()=>{if(!hasPermission('driver_accounts')){adminStatus('driverStatus','Permission required: Driver Accounts.',true);return}try{adminStatus('driverStatus','Registering driver...');await adminCall('add_driver',{trucksbook_id:$('tbid').value.trim(),trucksbook_username:$('tbuser').value.trim(),display_name:$('display').value.trim(),pin:''});$('tbid').value=$('tbuser').value=$('display').value='';adminStatus('driverStatus','Driver registered successfully.');await loadAdmin()}catch(e){adminStatus('driverStatus',e.message,true)}};
@@ -452,6 +587,8 @@ $("refreshAdmin").onclick=()=>loadAdmin();
 $("sponsorRefresh").onclick=()=>loadSponsorSlots();
 $("demoVisitorsRefresh").onclick=()=>loadDemoVisitors();
 $("galleryRefresh").onclick=()=>loadAdminGallery();
+$('sponsorRefresh')?.addEventListener('click',()=>loadAnytimeAdmin());
+void loadAnytimePublic();
 if(configured) getSB().then(client=>client.auth.getSession()).then(async({data})=>{
   if(!data.session) return;
   // A normal Sirski member may have a valid Supabase session, but must not see
