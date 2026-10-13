@@ -200,8 +200,10 @@ function spinAnimation(target,onDone){
   const slotAngle=target<20?(target*17.9104477612)+(17.9104477612/2):358.2089552239+(1.7910447761/2);
   const desired=-slotAngle;
   let delta=((desired-(currentRotation%360))+360)%360;
-  // Big, exciting spin: 7 full turns in the first 5 seconds, then a smooth 10-second slowdown.
-  delta += 5*360;
+  // Big spin: 7 full turns in the first 5 seconds, then align to the target
+  // during a smooth 10-second slowdown. Add 7 turns so the slow phase never
+  // needs to rotate backwards.
+  delta += 7*360;
   const start=currentRotation;
   const total=start+delta;
   const duration=15000;
@@ -490,8 +492,8 @@ $('anytimeSpinBtn')?.addEventListener('click',async()=>{
     if(error){let msg=error.message||'Spin request failed.';try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}throw new Error(msg);}
     if(data?.error)throw new Error(data.error);
     const resultSlot = Number(data.result_slot_number);
-    if (!Number.isInteger(resultSlot) || resultSlot < 1 || resultSlot > 21) {
-      throw new Error('The server returned an invalid wheel result.');
+    if (!Number.isInteger(resultSlot) || resultSlot < 1 || resultSlot > 10) {
+      throw new Error('The Anytime server returned an invalid sponsor slot. Expected Slot 1–10.');
     }
     // Animate the shared wheel to the exact slot returned by the server.
     // The spin is already recorded server-side; animation only displays that result.
