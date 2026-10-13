@@ -188,7 +188,11 @@ async function updateButton(){
   $('spinBtn').disabled=false;
 }
 
-let currentRotation=0;
+// Start the wheel at a random visual angle on every page load. The pointer stays fixed;
+// only the wheel's resting position changes. spinAnimation uses this same angle so the
+// next spin still finishes on the exact slot returned by the server.
+let currentRotation=Math.random()*360;
+$('wheel').style.transform=`rotate(${currentRotation}deg)`;
 let animationFrame=null;
 function easeOutCubic(t){return 1-Math.pow(1-t,3)}
 function spinAnimation(target,onDone){
