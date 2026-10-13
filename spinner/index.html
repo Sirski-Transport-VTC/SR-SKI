@@ -101,7 +101,8 @@
           <option value="25">Keep at least 25 results</option>
           <option value="30">Keep at least 30 results</option>
         </select>
-        <div class="small" style="margin-top:6px">Secondary admins cannot delete the newest selected number of results. The server enforces this minimum.</div>
+        <button id="anytimeApplyRetention" class="btn" type="button" style="width:auto;margin-top:10px">APPLY RETENTION</button>
+        <div class="small" style="margin-top:6px">Keep the newest selected number of results for this raffle and permanently delete older results. Secondary admins cannot delete the protected newest results. The server enforces the selected minimum.</div>
       </div>
       <div id="anytimeResultsTable" style="overflow:auto"></div>
       <h4 style="margin-top:18px">Publish Winner</h4>
@@ -548,6 +549,18 @@ async function loadAnytimeAdmin(){
   }catch(e){anytimeStatus(e.message||'Unable to load Anytime raffles.',true);}
 }
 $('anytimeRetainCount')?.addEventListener('change',()=>renderAnytimeResultsPage());
+$('anytimeApplyRetention')?.addEventListener('click',async()=>{
+  if(!hasPermission('delete_anytime_spin_results')){anytimeStatus('Permission required: Delete Anytime Spin Results.',true);return;}
+  if(!anytimeSelectedRaffleId){anytimeStatus('Select a raffle and view its results first.',true);return;}
+  const keep_count=anytimeRetainCount();
+  const eligible=Math.max(0,anytimeResultsRows.length-keep_count);
+  if(!eligible){anytimeStatus(`This raffle has ${anytimeResultsRows.length} result(s); nothing can be removed while keeping ${keep_count}.`);return;}
+  if(!confirm(`Keep the newest ${keep_count} results and permanently delete ${eligible} older result(s) from this raffle? This cannot be undone.`))return;
+  const btn=$('anytimeApplyRetention');btn.disabled=true;btn.textContent='APPLYING...';
+  try{const r=await adminCall('retain_anytime_results',{raffle_id:anytimeSelectedRaffleId,keep_count});anytimeStatus(`Retention applied: kept ${r.kept_count} result(s) and deleted ${r.deleted_count} older result(s).`);await loadAnytimeResults(anytimeSelectedRaffleId);await loadAnytimePublic();}
+  catch(e){anytimeStatus(e.message||'Unable to apply retention.',true);}
+  finally{btn.disabled=false;btn.textContent='APPLY RETENTION';}
+});
 function renderAnytimeResultsPage(){
   const table=$('anytimeResultsTable');
   const rows=anytimeResultsRows||[];
@@ -564,13 +577,13 @@ function renderAnytimeResultsPage(){
     let action='—';
     if(canDelete){
       action=protectedRow
-        ? '<span class="small">Protected (newest 15)</span>'
+        ? `<span class="small">Protected (newest ${retainCount})</span>`
         : `<button class="anytime-delete-btn" type="button" data-result-id="${escapeHtml(x.id)}">DELETE</button>`;
     }
     return `<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${Number(x.result_slot_number)}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
   }).join('');
   const retentionControl=$('anytimeRetentionControl');
-  if(retentionControl)retentionControl.style.display=canDelete&&!isMaster?'block':'none';
+  if(retentionControl)retentionControl.style.display=canDelete?'block':'none';
   table.innerHTML=rows.length
     ? `<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th><th>Action</th></tr>${htmlRows}</table>
        <div class="anytime-pagination"><span class="small">Showing ${start+1}–${Math.min(start+ANYTIME_RESULTS_PAGE_SIZE,rows.length)} of ${rows.length} results • Page ${anytimeResultsCurrentPage} of ${totalPages}</span><div style="display:flex;gap:8px"><button type="button" id="anytimeResultsPrev" ${anytimeResultsCurrentPage<=1?'disabled':''}>PREVIOUS</button><button type="button" id="anytimeResultsNext" ${anytimeResultsCurrentPage>=totalPages?'disabled':''}>NEXT</button></div></div>`
@@ -611,7 +624,7 @@ async function loadAnytimeResults(raffleId){
     $('anytimeWinnerPrize').style.display=canManage?'block':'none';
     $('anytimeWinnerNote').style.display=canManage?'block':'none';
     $('anytimePublishWinnerBtn').style.display=canManage?'block':'none';
-    anytimeStatus(`Results loaded. The newest ${anytimeRetainCount()} results are protected from secondary-admin deletion. Close the raffle before publishing the winner.`);
+    anytimeStatus(`Results loaded. The selected retention setting keeps the newest ${anytimeRetainCount()} results protected for secondary admins. Close the raffle before publishing the winner.`);
   }catch(e){anytimeStatus(e.message||'Unable to load results.',true);}
 }
 $('anytimeCreateBtn')?.addEventListener('click',async()=>{if(!hasPermission('sponsor_slots')){anytimeStatus('Permission required: Sponsor Slots.',true);return;}const slot_number=Number($('anytimeSlotSelect').value);if(!slot_number){anytimeStatus('Choose a sponsor slot first.',true);return;}try{$('anytimeCreateBtn').disabled=true;await adminCall('create_anytime_raffle',{slot_number});anytimeStatus('Draft raffle created from the selected sponsor slot.');await loadAnytimeAdmin();}catch(e){anytimeStatus(e.message||'Unable to create raffle.',true);}finally{$('anytimeCreateBtn').disabled=false;}});
