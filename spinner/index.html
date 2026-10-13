@@ -200,29 +200,21 @@ function spinAnimation(target,onDone){
   const slotAngle=target<20?(target*17.9104477612)+(17.9104477612/2):358.2089552239+(1.7910447761/2);
   const desired=-slotAngle;
   let delta=((desired-(currentRotation%360))+360)%360;
-  // Big spin: 7 full turns in the first 5 seconds, then align to the target
-  // during a smooth 10-second slowdown. Add 7 turns so the slow phase never
-  // needs to rotate backwards.
+  // One continuous animation: many full turns followed by a smooth, uninterrupted deceleration.
   delta += 7*360;
   const start=currentRotation;
   const total=start+delta;
-  const duration=15000;
-  const fastDuration=5000;
-  const fastAngle=7*360;
-  const slowAngle=delta-fastAngle;
+  const duration=10000;
   const started=performance.now();
   function frame(now){
     const elapsed=Math.min(now-started,duration);
-    let angle;
-    if(elapsed<=fastDuration){
-      angle=start+fastAngle*(elapsed/fastDuration);
-    }else{
-      const t=(elapsed-fastDuration)/(duration-fastDuration);
-      angle=start+fastAngle+slowAngle*easeOutCubic(t);
-    }
+    const t=elapsed/duration;
+    const eased=1-Math.pow(1-t,3);
+    const angle=start+delta*eased;
     $('wheel').style.transform=`rotate(${angle}deg)`;
-    if(elapsed<duration){ animationFrame=requestAnimationFrame(frame); }
-    else{
+    if(elapsed<duration){
+      animationFrame=requestAnimationFrame(frame);
+    }else{
       currentRotation=total;
       $('wheel').style.transform=`rotate(${total}deg)`;
       animationFrame=null;
@@ -447,11 +439,11 @@ function anytimePublicStatus(message, bad=false){ const el=$("anytimePublicStatu
 async function renderAnytimePublicResults(client, raffle){
   const wrap=$('anytimePublicResults'), table=$('anytimePublicResultsTable');
   try{
-    const {data,error}=await client.from('anytime_spin_results').select('participant_name,result_slot_number,hit_target,created_at').eq('raffle_id',raffle.id).order('created_at',{ascending:false}).limit(300);
+    const {data,error}=await client.from('anytime_spin_results').select('participant_name,result_slot_number,created_at').eq('raffle_id',raffle.id).order('created_at',{ascending:false}).limit(300);
     if(error) throw error;
     const rows=data||[];
     wrap.style.display='block';
-    table.innerHTML=rows.length?'<table class="table"><tr><th>Participant</th><th>Result</th><th>Target hit?</th><th>Date / Time</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${x.hit_target?'Yes':'No'}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No spins have been recorded for this raffle yet.</div>';
+    table.innerHTML=rows.length?'<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No spins have been recorded for this raffle yet.</div>';
   }catch(e){wrap.style.display='block';table.textContent=e.message||'Unable to load participant results.';}
 }
 async function loadAnytimePublic(){
@@ -492,16 +484,14 @@ $('anytimeSpinBtn')?.addEventListener('click',async()=>{
     if(error){let msg=error.message||'Spin request failed.';try{const res=error.context?.clone?.();const b=await res?.json?.();if(b?.error)msg=b.error;}catch(_){}throw new Error(msg);}
     if(data?.error)throw new Error(data.error);
     const resultSlot = Number(data.result_slot_number);
-    if (!Number.isInteger(resultSlot) || resultSlot < 1 || resultSlot > 10) {
-      throw new Error('The Anytime server returned an invalid sponsor slot. Expected Slot 1–10.');
+    if (!Number.isInteger(resultSlot) || resultSlot < 1 || resultSlot > 21) {
+      throw new Error('The Anytime server returned an invalid wheel result. Expected Slot 1–21.');
     }
     // Animate the shared wheel to the exact slot returned by the server.
     // The spin is already recorded server-side; animation only displays that result.
     spinAnimation(resultSlot - 1, () => {
       $('anytimeResultSlot').textContent=`SLOT ${resultSlot}`;
-      $('anytimeResultText').textContent=data.hit_target
-        ? `You landed on the sponsor target slot! This result is recorded, but the winner will be announced by the admin after reviewing all results.`
-        : `Your result has been recorded. The target sponsor slot was ${data.target_slot_number}; the admin will review all results before announcing the winner.`;
+      $('anytimeResultText').textContent='Your wheel result has been recorded. The admin will review all participant results and manually declare the winner of the sponsor gift.';
       $('anytimeSpinResult').style.display='block';
       anytimePublicStatus('Your result was recorded successfully.');
     });
@@ -531,8 +521,8 @@ async function loadAnytimeResults(raffleId){
   anytimeSelectedRaffleId=raffleId;$('anytimeResultsBox').style.display='block';$('anytimeResultsTable').innerHTML='';
   try{
     const r=await adminCall('list_anytime_results',{raffle_id:raffleId});const raffle=r.raffle;const results=r.results||[];
-    $('anytimeResultsSummary').textContent=`${results.length} recorded spin(s). Target: Slot ${raffle.target_slot_number} — ${raffle.prize_text}. Results include both hits and misses.`;
-    $('anytimeResultsTable').innerHTML=results.length?'<table class="table"><tr><th>Participant</th><th>Result</th><th>Target hit?</th><th>Date / Time</th></tr>'+results.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${x.hit_target?'<span class="pill">Yes</span>':'<span class="pill off">No</span>'}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No participants recorded yet.</div>';
+    $('anytimeResultsSummary').textContent=`${results.length} recorded spin(s) for sponsor prize: ${raffle.prize_text} (Sponsor Slot ${raffle.target_slot_number}). Wheel results are Slots 1–21. Review the entries and manually declare the winner.`;
+    $('anytimeResultsTable').innerHTML=results.length?'<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th></tr>'+results.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No participants recorded yet.</div>';
     $('anytimeWinnerPrize').value=raffle.prize_text;
     anytimeStatus('Results loaded. Close the raffle before publishing the winner.');
   }catch(e){anytimeStatus(e.message||'Unable to load results.',true);}
