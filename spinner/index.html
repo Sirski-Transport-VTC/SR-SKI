@@ -35,6 +35,7 @@
   <h3 id="discordHubTitle">💬 SIRSKI SPINNER ON DISCORD</h3>
   <p>Follow Friday Spinner updates, review the rules, check the leaderboard, and join the spinner community. <b>Driven by Passion. Built on Trust.</b></p>
   <div class="discord-links">
+    <a class="discord-link" id="spinnerDiscordInviteLink" href="https://discord.gg/4AYMkbCVT" target="_blank" rel="noopener noreferrer">💬 Join Sirski Discord ↗</a>
     <a class="discord-link" href="https://discord.com/channels/1559071081178988574/1559480255402475571" target="_blank" rel="noopener noreferrer">📢 Spinner Announcements ↗</a>
     <a class="discord-link" href="https://discord.com/channels/1559071081178988574/1559480684861726801" target="_blank" rel="noopener noreferrer">📜 Spinner Rules ↗</a>
     <a class="discord-link" href="https://discord.com/channels/1559071081178988574/1559480582029709352" target="_blank" rel="noopener noreferrer">🏆 Spinner Leaderboard ↗</a>
@@ -121,6 +122,19 @@
 <div class="footer">Sirski Transport • Friday Spinner • Server-controlled weekly draw</div></div>
 <script>
 const cfg=window.SIRSKI_CONFIG||{}; const configured=!!(cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY&&!cfg.SUPABASE_URL.includes('YOUR_')&&!cfg.SUPABASE_ANON_KEY.includes('YOUR_')); let sb=null; let supabaseLoading=null; if(!configured) document.body.insertAdjacentHTML('afterbegin','<div style="background:#6b1117;padding:10px;text-align:center;font-weight:700">Demo mode: configure spinner/config.js for real Friday spins.</div>'); async function loadSupabase(){ if(window.supabase?.createClient) return window.supabase; if(supabaseLoading) return supabaseLoading; const cdns=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js']; supabaseLoading=(async()=>{ for(const src of cdns){ try{ await new Promise((resolve,reject)=>{ const s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); if(window.supabase?.createClient) return window.supabase; }catch(e){} } throw new Error('Unable to load the Supabase client. Please check your internet connection and reload the page.'); })(); return supabaseLoading; } async function getSB(){ if(!configured) throw new Error('The spinner backend is not configured yet. Demo spins are available. Please configure spinner/config.js for real Friday spins.'); const api=await loadSupabase(); if(!sb) sb=api.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY); return sb; } const $=id=>document.getElementById(id);
+// The server invite is managed by an authorized admin on the main Project 1 admin page.
+async function loadManagedDiscordInvite(){
+  const link=document.getElementById('spinnerDiscordInviteLink');
+  if(!link || !configured) return;
+  try {
+    const client=await getSB();
+    const {data,error}=await client.from('sirski_site_settings').select('setting_value').eq('setting_key','discord_invite_url').maybeSingle();
+    if(error) throw error;
+    const value=String(data?.setting_value||'').trim();
+    if(/^https:\/\/(discord\.gg\/|discord\.com\/invite\/)[A-Za-z0-9-]+\/?$/.test(value)){ link.href=value; }
+  } catch(error) { console.warn('Using the fallback Discord invite link.',error); }
+}
+loadManagedDiscordInvite();
 const slots=[
   {type:'quote',label:'FULL TANK<br>EMPTY WALLET',text:'Full tank, empty wallet — classic trucker math.'},
   {type:'p2',label:'2 POINTS<br>COFFEE RUN',text:'2 points! Enough for coffee and a short rest stop.'},
