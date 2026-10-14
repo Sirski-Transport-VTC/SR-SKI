@@ -147,6 +147,7 @@ const slots=[
 const values=slots.map(s=>s.type==='p2'?2:s.type==='p5'?5:s.type==='p10'?10:0);
 function buildLabels(){ $('labels').innerHTML=slots.map((s,i)=>{const cls=s.type==='quote'?'quote':`${s.type} prize`; const a=i<20?(i*17.9104477612)+(17.9104477612/2):358.2089552239+(1.7910447761/2); const flip=(a>90&&a<270)?'180deg':'0deg'; const label=String(s.label||'').replace(/<br\s*\/?\s*>/gi,' '); return `<div class="label number-label" style="--r:${a}deg;--flip:${flip}"><span class="slot-number">SLOT ${i+1}</span></div>${s.type==='jackpot'?'':`<div class="label quote-label ${cls}" style="--r:${a}deg;--flip:${flip}"><span class="slot-text">${label}</span></div>`}`}).join('') } buildLabels();
 function captionForSlot(slot){return slot.text || (slot.type==='p10'?'10 points! BIG HAUL DELIVERED! 🚛💨':slot.type==='p5'?'5 points! Nice load, driver!':slot.type==='p2'?'2 points! Small haul, still a haul.':'Keep the wheels turning!')}
+function anytimeSlotLabel(slotNumber){const slot=slots[Number(slotNumber)-1];return slot?String(slot.label||'JACKPOT').replace(/<br\s*\/?\s*>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():'Unknown slot';}
 function randomQuote(){const q=slots.filter(s=>s.type==='quote');return q[Math.floor(Math.random()*q.length)].text}
 function setStatus(t,bad=false){$('status').textContent=t;$('status').style.color=bad?'#ff8e8e':'#cbd6e4'}
 function captionFor(v){const a=captions[v]||[];return a[Math.floor(Math.random()*a.length)]||''}
@@ -469,7 +470,7 @@ async function renderAnytimePublicResults(client, raffle){
     if(error) throw error;
     const rows=data||[];
     wrap.style.display='block';
-    table.innerHTML=rows.length?'<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${x.result_slot_number}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No spins have been recorded for this raffle yet.</div>';
+    table.innerHTML=rows.length?'<table class="table"><tr><th>Participant</th><th>Wheel Result</th><th>Date / Time</th></tr>'+rows.map(x=>`<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${Number(x.result_slot_number)} — ${escapeHtml(anytimeSlotLabel(x.result_slot_number))}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td></tr>`).join('')+'</table>':'<div class="small">No spins have been recorded for this raffle yet.</div>';
   }catch(e){wrap.style.display='block';table.textContent=e.message||'Unable to load participant results.';}
 }
 async function loadAnytimePublic(){
@@ -516,7 +517,7 @@ $('anytimeSpinBtn')?.addEventListener('click',async()=>{
     // Animate the shared wheel to the exact slot returned by the server.
     // The spin is already recorded server-side; animation only displays that result.
     spinAnimation(resultSlot - 1, () => {
-      $('anytimeResultSlot').textContent=`SLOT ${resultSlot}`;
+      $('anytimeResultSlot').textContent=`SLOT ${resultSlot} — ${anytimeSlotLabel(resultSlot)}`;
       $('anytimeResultText').textContent='Your wheel result has been recorded. The admin will review all participant results and manually declare the winner of the sponsor gift.';
       $('anytimeSpinResult').style.display='block';
       anytimePublicStatus('Your result was recorded successfully.');
@@ -582,7 +583,7 @@ function renderAnytimeResultsPage(){
         ? `<span class="small">Protected (newest ${retainCount})</span>`
         : `<button class="anytime-delete-btn" type="button" data-result-id="${escapeHtml(x.id)}">DELETE</button>`;
     }
-    return `<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${Number(x.result_slot_number)}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
+    return `<tr><td>${escapeHtml(x.participant_name)}</td><td>Slot ${Number(x.result_slot_number)} — ${escapeHtml(anytimeSlotLabel(x.result_slot_number))}</td><td>${escapeHtml(new Date(x.created_at).toLocaleString())}</td><td>${action}</td></tr>`;
   }).join('');
   const retentionControl=$('anytimeRetentionControl');
   if(retentionControl)retentionControl.style.display=canDelete?'block':'none';
